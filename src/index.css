@@ -1,0 +1,386 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEMING
+   ───────────────────────────────────────────────────────────────────────────
+   Two themes, three user choices: Dark, Light, and System (which resolves to
+   one of the other two from `prefers-color-scheme`). The store adds exactly one
+   of `.dark` / `.light` to <html>; nothing else in the app branches on theme.
+
+   How light mode works without touching 200+ components:
+
+   Tailwind v4 compiles every palette utility to a *variable reference* rather
+   than a literal — `.text-slate-400 { color: var(--color-slate-400) }` — and
+   alpha modifiers to `color-mix(in oklab, var(--color-white) 10%, transparent)`
+   inside an `@supports (color: color-mix(in lab, red, red))` block that every
+   current browser satisfies. (Tailwind also emits a pre-`@supports` literal
+   such as `#ffffff1a`, but it is a legacy fallback that never applies where
+   color-mix is supported.) So redefining those tokens under `html.light`
+   re-colours the entire app — the ~500 slate/white/black utility usages
+   included — with no component edits and no risk to the dark theme, which keeps
+   Tailwind's untouched defaults.
+
+   Two things variables cannot reach, handled explicitly below:
+     · arbitrary hex surfaces (the old `bg-[#10162a]`) — replaced with the
+       `--surface-*` ladder, whose dark values are byte-identical to the hexes
+       they replaced, so dark mode renders exactly as before;
+     · `text-white` sitting on a *solid accent* (gradient buttons, rose badges)
+       must stay white in both themes — those use `.text-on-accent`, which is
+       theme-independent by construction.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: dark;
+
+  /* Surface ladder, darkest → lightest. Values are the exact hexes that were
+     previously hardcoded across the components, so dark mode is unchanged. */
+  --surface-app: #0a0e1a;    /* page + sticky header */
+  --surface-sunken: #0a0f1c; /* deepest well: code, readonly output */
+  --surface-well: #0c1120;   /* inputs, inner panels */
+  --surface-panel: #0d1322;  /* message container, dropzone */
+  --surface-bar: #0e1424;    /* toolbar strips */
+  --surface-card: #10162a;   /* cards and sections */
+  --surface-modal: #121829;  /* modal shell */
+  --surface-grad: #131a30;   /* gradient start */
+  --surface-bubble: #141b2e; /* assistant bubble */
+  --surface-pop: #171f36;    /* popovers, menus */
+  --surface-raised: #1a2238; /* toasts, user bubble alt */
+
+  --body-bg: #0a0e1a;
+  --body-fg: #e2e8f0;
+  --math-fg: #f4f6ff;
+
+  --scroll-thumb: rgb(148 163 184 / 0.28);
+  --scroll-thumb-hover: rgb(148 163 184 / 0.45);
+  --selection-bg: rgb(139 92 246 / 0.4);
+  --selection-fg: #fff;
+
+  --ambient-a: rgb(124 58 237 / 0.16);
+  --ambient-b: rgb(37 99 235 / 0.14);
+  --gradient-text: linear-gradient(135deg, #a78bfa, #818cf8, #60a5fa);
+
+  /* MathLive <math-field> — see the light-mode block for why these are variables. */
+  --mf-field-bg: #0a0f1c;
+  --mf-field-fg: #e2e8f0;
+  --mf-field-border: rgb(255 255 255 / 0.1);
+  --mf-field-caret: #a78bfa;
+  --mf-field-sel-bg: #5b3aa8;
+  --mf-field-sel-fg: #f5f3ff;
+  --mf-field-contains: rgb(139 92 246 / 0.16);
+  --mf-field-placeholder: #64748b;
+  --mf-field-focus-ring: rgb(139 92 246 / 0.3);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   LIGHT THEME
+   `html.light` is set by the store for the Light choice, and also for System
+   when the OS reports a light preference. Specificity: `html.light` is (0,1,1),
+   Tailwind's `:root, :host` theme block is (0,1,0) — so these win cleanly
+   without `!important`.
+   ─────────────────────────────────────────────────────────────────────────── */
+html.light {
+  color-scheme: light;
+
+  /* Surfaces re-tuned rather than mathematically inverted: a flat inversion
+     makes cards grey and the page white, which reads muddy. Premium light UIs
+     do the opposite — a soft tinted page with crisp white cards floating on
+     it — so cards/modals/popovers go pure white and the page and input wells
+     carry the tint. Depth still increases up the ladder, just from the other end. */
+  --surface-app: #f4f6fb;
+  --surface-sunken: #e9edf6;
+  --surface-well: #eef2f9;
+  --surface-panel: #ffffff;
+  --surface-bar: #f2f5fa;
+  --surface-card: #ffffff;
+  --surface-modal: #ffffff;
+  --surface-grad: #fafbfe;
+  --surface-bubble: #f1f5fb;
+  --surface-pop: #ffffff;
+  --surface-raised: #ffffff;
+
+  --body-bg: #f4f6fb;
+  --body-fg: #1e293b;
+  --math-fg: #0f172a;
+
+  --scroll-thumb: rgb(100 116 139 / 0.32);
+  --scroll-thumb-hover: rgb(71 85 105 / 0.5);
+  --selection-bg: rgb(139 92 246 / 0.28);
+  --selection-fg: #1e1b4b;
+
+  --ambient-a: rgb(124 58 237 / 0.07);
+  --ambient-b: rgb(37 99 235 / 0.06);
+  --gradient-text: linear-gradient(135deg, #6d28d9, #4f46e5, #2563eb);
+
+  /* `white` becomes ink. This one line carries most of the theme: it flips the
+     ~150 `bg-white/N` and `border-white/N` overlays from "lighten the dark
+     surface" to "darken the light surface", and turns the ~58 plain
+     `text-white` headings into near-black. Text that must stay white because it
+     sits on a solid accent uses `.text-on-accent` instead and is unaffected. */
+  --color-white: #0f172a;
+
+  /* `black` is deliberately NOT remapped: it backs the modal, palette and
+     lightbox scrims (`bg-black/50` … `/95`), which need to stay black to dim
+     the page. The low-alpha uses are chips and wells rather than scrims, and
+     those are corrected individually further down. */
+
+  /* Slate is the app's text ramp; shift each step to its mirror so the
+     brightest dark-mode tier becomes the darkest light-mode tier.
+     The bottom two steps are *not* a straight mirror — slate-500/600 are the
+     app's muted-caption tiers (86 and 7 usages, plus every input placeholder),
+     and their true mirrors (#94a3b8 / #cbd5e1) land at 2.4:1 and 1.5:1 on the
+     light page. These values keep the hierarchy while staying readable:
+     5.1:1 and 3.9:1 on `--surface-app`, 5.5:1 and 4.2:1 on a white card. */
+  --color-slate-100: #0f172a;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #5b6a80;
+  --color-slate-600: #6f7d92;
+
+  /* Accent 100–300 are used almost exclusively as *text* on a 5–20% tint of the
+     same hue. Over white those pale steps vanish, so each drops ~4 stops.
+     The 400/500 steps are left alone: they back the tints, borders, rings and
+     gradient buttons, which are correct over either background. */
+  --color-violet-100: #4c1d95;
+  --color-violet-200: #5b21b6;
+  --color-violet-300: #6d28d9;
+  --color-indigo-200: #3730a3;
+  --color-indigo-300: #4338ca;
+  --color-sky-100: #0c4a6e;
+  --color-sky-200: #075985;
+  --color-sky-300: #0369a1;
+  --color-cyan-100: #164e63;
+  --color-cyan-200: #155e75;
+  --color-cyan-300: #0e7490;
+  --color-emerald-100: #064e3b;
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-teal-200: #115e59;
+  --color-teal-300: #0f766e;
+  --color-amber-100: #78350f;
+  --color-amber-200: #92400e;
+  --color-amber-300: #b45309;
+  --color-yellow-200: #a16207;
+  --color-orange-200: #9a3412;
+  --color-orange-300: #c2410c;
+  --color-rose-100: #881337;
+  --color-rose-200: #9f1239;
+  --color-rose-300: #be123c;
+  --color-fuchsia-200: #86198f;
+  --color-fuchsia-300: #a21caf;
+
+  /* MathLive's <math-field> is created imperatively and styled through inline
+     properties (see hooks/useMathfield), so it cannot carry Tailwind classes.
+     It reads these instead — the only surface in the app whose theming has to
+     be handed to it rather than inherited. */
+  --mf-field-bg: #ffffff;
+  --mf-field-fg: #0f172a;
+  --mf-field-border: rgb(15 23 42 / 0.14);
+  --mf-field-caret: #6d28d9;
+  --mf-field-sel-bg: #c4b5fd;
+  --mf-field-sel-fg: #2e1065;
+  --mf-field-contains: rgb(139 92 246 / 0.14);
+  --mf-field-placeholder: #6f7d92;
+  --mf-field-focus-ring: rgb(139 92 246 / 0.28);
+}
+
+/* `disabled:opacity-40` fades a control toward whatever is behind it. Over the
+   dark page that reads as "switched off"; over the light page a violet or
+   emerald gradient at 40% turns pastel while its `.text-on-accent` label stays
+   pure white — 1.1–1.8:1, i.e. invisible. Light mode gets an explicit disabled
+   skin instead of a fade. */
+html.light .mf-btn:disabled {
+  opacity: 1;
+  background-image: none;
+  background-color: #e4e9f2;
+  color: #78869a;
+  border-color: rgb(15 23 42 / 0.08);
+  box-shadow: none;
+}
+/* The label is usually a child span carrying `.text-on-accent`, which sets its
+   own colour and so is not reached by the rule above. */
+html.light .mf-btn:disabled .text-on-accent,
+html.light .mf-btn:disabled * {
+  color: #78869a;
+}
+
+/* The few 400-step accents used as link/label text. Scoped to the text utility
+   rather than the token so borders, rings and gradient hovers on the same
+   shade keep their intended colour. */
+html.light .text-cyan-400 { color: #0e7490; }
+html.light .text-violet-400 { color: #6d28d9; }
+html.light .text-rose-400 { color: #be123c; }
+
+/* Low-alpha `black` is the app's idiom for an inline code chip or a recessed
+   well, never a scrim. Over a light surface a black wash reads as dirt, so
+   these become a cool neutral. `/50` and up are left to the token: those are
+   the real scrims. */
+html.light .bg-black\/0 { background-color: transparent; }
+html.light .bg-black\/20 { background-color: rgb(15 23 42 / 0.045); }
+html.light .bg-black\/25 { background-color: rgb(15 23 42 / 0.055); }
+html.light .bg-black\/30 { background-color: rgb(15 23 42 / 0.07); }
+html.light .bg-black\/40 { background-color: rgb(15 23 42 / 0.085); }
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--body-bg);
+  color: var(--body-fg);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle ambient wash behind everything. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 500px at 12% -8%, var(--ambient-a), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, var(--ambient-b), transparent 55%);
+  z-index: 0;
+}
+
+/* Text that sits on a solid accent — gradient buttons, the rose delete badge,
+   the emerald confirm. It stays white in both themes by construction, because
+   the surface underneath it is the same colour in both themes. Using
+   `text-white` here would be wrong: light mode remaps `white` to ink. */
+.text-on-accent {
+  color: #fff;
+}
+/* Same reasoning for a solid white *surface* on an accent track: the switch knob
+   rides a violet gradient when on, so it is white in both themes. */
+.bg-on-accent {
+  background-color: #fff;
+}
+
+/* MathLive's <math-field> otherwise falls back to Chromium's UA focus ring,
+   `outline: auto 1px rgb(16,16,16)` — a near-black frame that reads as a bug
+   against the dark field and as a harsh box against the light one, while every
+   other control in the app focuses violet. Only the ring is replaced: the
+   border colour is an inline style on the element and would need `!important`
+   to override, which is not worth it for a second visual cue. */
+math-field:focus,
+math-field:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--mf-field-focus-ring);
+}
+
+/* Math rendering (KaTeX) */
+.mf-math {
+  color: var(--math-fg);
+}
+.mf-math.inline {
+  display: inline;
+}
+.katex {
+  font-size: 1.12em;
+  color: var(--math-fg);
+}
+.katex-display {
+  margin: 0.4rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+.katex-display > .katex {
+  white-space: nowrap;
+}
+math {
+  font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", "Noto Sans Math", serif;
+}
+
+/* Custom scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-fg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Premium gradient text */
+.gradient-text {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* The caret at the end of a streaming answer. A hard step rather than a fade:
+   a real text cursor blinks on/off, and easing it reads as a pulsing glow. */
+@keyframes mfCaretBlink {
+  0%, 45% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+.mf-caret {
+  display: inline-block;
+  width: 0.45em;
+  height: 1.05em;
+  margin-left: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  vertical-align: -0.18em;
+  animation: mfCaretBlink 1.05s steps(1, end) infinite;
+}
+
+/* Rendered answers hold model-authored URLs and long unbroken identifiers, which
+   would otherwise push the bubble wider than the column. */
+.mf-md {
+  overflow-wrap: anywhere;
+}
+/* …except inside code and maths, where a break mid-token changes the meaning of
+   what is on screen. Those scroll instead — see CodeBlock's wrap toggle. */
+.mf-md pre,
+.mf-md .katex,
+.mf-md .mf-math {
+  overflow-wrap: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-caret { animation: none; }
+}
+
+/* Smooth transitions for theme switching — scoped to body & theme elements only */
+body, header, aside, main, section, .theme-transition {
+  transition-property: background-color, border-color, color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* A theme switch repaints every surface at once; without this the transition
+   above turns each one into its own 200ms animation and the change looks like a
+   smear. The store sets this class for the duration of the swap. */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Mathorium sitemap.
+
+  One URL, deliberately. The app is a single document and every tool is a
+  `?tab=` deep link into it, so those URLs all declare `/` as their canonical.
+  Listing them here would be submitting non-canonical duplicates of the page
+  and inviting Google to pick a winner itself.
+
+  `lastmod` is the 9.0 release date; bump it when the page's content actually
+  changes, not on every deploy — a lastmod that always says "today" is ignored.
+-->
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
+  <url>
+    <loc>https://mathorium.vercel.app/</loc>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://mathorium.vercel.app/og.png</image:loc>
+      <image:title>Mathorium — free AI math OCR: image to LaTeX, MathML and Word</image:title>
+    </image:image>
+  </url>
+</urlset>

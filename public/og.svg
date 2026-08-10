@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Social card (Open Graph / Twitter summary_large_image), 1200x630.
+       Rasterised to public/og.png by scripts/make-icons.mjs. Text is drawn as
+       <text> with a system-font stack, so the raster step must run on a machine
+       that has one — which is why the PNG is committed rather than built on the
+       deploy runner. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="52%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4338ca"/>
+    </linearGradient>
+    <radialGradient id="gloss" cx="26%" cy="16%" r="78%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="62%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="node" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c4b5fd"/>
+      <stop offset="50%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#93c5fd"/>
+    </linearGradient>
+    <radialGradient id="ambientA" cx="12%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ambientB" cx="100%" cy="8%" r="62%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0a0e1a"/>
+  <rect width="1200" height="630" fill="url(#ambientA)"/>
+  <rect width="1200" height="630" fill="url(#ambientB)"/>
+
+  <!-- The mark, at the size it is actually legible in a timeline thumbnail. -->
+  <g transform="translate(84 96) scale(0.32)">
+    <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#tile)"/>
+    <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#gloss)"/>
+    <rect x="22" y="22" width="468" height="468" rx="114" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="12"/>
+    <path d="M136 360V152l120 136 120-136v208" fill="none" stroke="#ffffff" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="256" cy="288" r="34" fill="#ffffff"/>
+    <circle cx="256" cy="288" r="25" fill="url(#node)"/>
+  </g>
+
+  <g font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+    <text x="84" y="316" font-size="94" font-weight="800" letter-spacing="-3" fill="url(#word)">Mathorium</text>
+    <text x="84" y="382" font-size="34" font-weight="600" fill="#cbd5e1">Free AI math OCR · image → LaTeX, MathML &amp; Word</text>
+    <text x="84" y="436" font-size="26" fill="#94a3b8">The open Mathpix alternative — runs in your browser, no API key, no upload.</text>
+
+    <!-- Feature chips. Rects are hand-measured to their labels; changing a label
+         means changing its width. -->
+    <g font-size="22" font-weight="600">
+      <rect x="84" y="482" width="250" height="52" rx="26" fill="#8b5cf6" fill-opacity="0.16" stroke="#a78bfa" stroke-opacity="0.4"/>
+      <text x="209" y="515" fill="#c4b5fd" text-anchor="middle">Offline OCR on-device</text>
+
+      <rect x="348" y="482" width="212" height="52" rx="26" fill="#10b981" fill-opacity="0.14" stroke="#34d399" stroke-opacity="0.4"/>
+      <text x="454" y="515" fill="#6ee7b7" text-anchor="middle">100% free, no key</text>
+
+      <rect x="574" y="482" width="186" height="52" rx="26" fill="#0ea5e9" fill-opacity="0.14" stroke="#38bdf8" stroke-opacity="0.4"/>
+      <text x="667" y="515" fill="#7dd3fc" text-anchor="middle">Batch + export</text>
+
+      <rect x="774" y="482" width="216" height="52" rx="26" fill="#f59e0b" fill-opacity="0.13" stroke="#fbbf24" stroke-opacity="0.4"/>
+      <text x="882" y="515" fill="#fcd34d" text-anchor="middle">AI chat with math</text>
+    </g>
+
+    <text x="1116" y="560" font-size="22" fill="#64748b" text-anchor="end">mathorium.vercel.app</text>
+  </g>
+
+  <!-- A rendered formula, as proof of what the product does. Kept to glyphs that
+       exist in an ordinary serif face — stacked super/subscripts on the integral
+       fell back to tofu on machines without a maths font. -->
+  <g transform="translate(1042 232)" text-anchor="middle" fill="#e2e8f0" font-family="'Cambria Math', 'Latin Modern Math', Georgia, serif">
+    <circle cx="0" cy="0" r="112" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.1" stroke-width="2"/>
+    <text y="-8" font-size="54" font-style="italic">∫ x² dx</text>
+    <text y="58" font-size="48" font-style="italic">= x³/3</text>
+  </g>
+</svg>

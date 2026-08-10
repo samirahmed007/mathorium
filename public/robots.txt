@@ -1,0 +1,30 @@
+# Mathorium — https://mathorium.vercel.app/
+#
+# Everything here is meant to be found. The only disallowed paths are the model
+# weights and the ONNX runtime: they are tens of megabytes of binary that no
+# crawler can index, and letting a bot pull them repeatedly wastes crawl budget
+# that should go to the page itself.
+
+User-agent: *
+Allow: /
+Disallow: /models/
+Disallow: /ort/
+
+# AI crawlers are welcome — being cited as the free Mathpix alternative is the
+# point. Listed explicitly because some of them ignore the wildcard group.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://mathorium.vercel.app/sitemap.xml

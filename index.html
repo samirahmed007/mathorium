@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SEO
+         ──────────────────────────────────────────────────────────────────────
+         This is a client-rendered single-file app: without help, the HTML a
+         crawler receives is a <div id="root"> and 17 MB of inlined script. So
+         three things are done deliberately here.
+
+         1. The <title>/description lead with the job ("free AI math OCR",
+            "image to LaTeX") rather than the product name, because nobody
+            searches for a name they have never heard.
+         2. `#root` ships a real, visible shell — brand, headline, feature copy,
+            FAQ. React's createRoot() discards those children on mount, so it is
+            the same content a user sees while the bundle parses, not hidden
+            text. With a bundle this size that shell is on screen long enough to
+            matter as UX too.
+         3. JSON-LD describes the app as a SoftwareApplication at price 0. No
+            aggregateRating: inventing review counts is a manual-action risk and
+            there is no review corpus to point at.
+         ══════════════════════════════════════════════════════════════════════ -->
+    <title>Mathorium — Free AI Math OCR: Image to LaTeX &amp; MathML</title>
+    <meta
+      name="description"
+      content="Free AI math OCR in your browser. Convert images, handwriting and PDF screenshots to LaTeX, MathML or Word — no API key, no upload. The open Mathpix alternative."
+    />
+    <link rel="canonical" href="https://mathorium.vercel.app/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="author" content="Samir Uddin Ahmed" />
+    <meta name="application-name" content="Mathorium" />
+    <meta name="generator" content="Mathorium 9.0" />
+
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Mathorium" />
+    <link rel="manifest" href="./manifest.json" />
+
+    <!-- Icons. The SVG is the source of truth and what every modern browser
+         actually uses; the PNGs are the fallbacks the platforms insist on —
+         iOS ignores SVG for the home-screen icon, and older Windows/Android
+         shells want a bitmap. All of them are rasterised from `public/icon.svg`
+         by `scripts/make-icons.mjs`, so they cannot drift from the in-app logo. -->
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <link rel="mask-icon" href="./icon.svg" color="#7c3aed" />
+
+    <!-- Open Graph / Twitter. `og:image` must be an absolute URL — relative
+         paths are silently dropped by every scraper. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Mathorium" />
+    <meta property="og:url" content="https://mathorium.vercel.app/" />
+    <meta property="og:title" content="Mathorium — Free AI Math OCR: Image to LaTeX &amp; MathML" />
+    <meta
+      property="og:description"
+      content="Convert images, handwriting and PDF screenshots to LaTeX, MathML or Word. Runs in your browser, no API key, no upload. The open Mathpix alternative."
+    />
+    <meta property="og:image" content="https://mathorium.vercel.app/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Mathorium: free AI math OCR that converts images to LaTeX, MathML and Word." />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Mathorium — Free AI Math OCR: Image to LaTeX &amp; MathML" />
+    <meta
+      name="twitter:description"
+      content="Image and handwriting to LaTeX, MathML or Word — in the browser, no API key, no upload. The open Mathpix alternative."
+    />
+    <meta name="twitter:image" content="https://mathorium.vercel.app/og.png" />
+    <meta name="twitter:image:alt" content="Mathorium: free AI math OCR that converts images to LaTeX, MathML and Word." />
+
+    <!-- KaTeX's stylesheet is render-blocking and third-party; the hint pays for
+         itself on a cold connection. -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous" />
+    <!-- No <meta name="keywords">: Google ignores it outright and Bing treats a
+         stuffed one as a spam signal, so it is downside with no upside. The
+         targeting lives in the copy below instead. -->
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://mathorium.vercel.app/#app",
+            "name": "Mathorium",
+            "alternateName": "Mathorium Math OCR",
+            "url": "https://mathorium.vercel.app/",
+            "applicationCategory": "EducationalApplication",
+            "applicationSubCategory": "Math OCR / LaTeX converter",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires a modern browser with WebAssembly",
+            "softwareVersion": "9.0",
+            "image": "https://mathorium.vercel.app/og.png",
+            "screenshot": "https://mathorium.vercel.app/og.png",
+            "description": "Free AI math OCR that converts images, handwriting and PDF screenshots into LaTeX, MathML, Word or Markdown. Recognition runs on-device with Pix2Text, so no API key is needed and nothing is uploaded.",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "featureList": [
+              "Image and screenshot to LaTeX",
+              "Handwriting recognition",
+              "MathML, Word (OMML) and Markdown export",
+              "Batch conversion with ZIP import",
+              "On-device offline OCR, no upload",
+              "AI chat with rendered math",
+              "Visual equation editor (MathType-style)",
+              "AI image generation"
+            ],
+            "author": { "@id": "https://mathorium.vercel.app/#author" },
+            "publisher": { "@id": "https://mathorium.vercel.app/#author" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://mathorium.vercel.app/#author",
+            "name": "Samir Uddin Ahmed"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://mathorium.vercel.app/#website",
+            "url": "https://mathorium.vercel.app/",
+            "name": "Mathorium",
+            "description": "Free AI math OCR: image to LaTeX, MathML and Word.",
+            "inLanguage": "en",
+            "publisher": { "@id": "https://mathorium.vercel.app/#author" }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://mathorium.vercel.app/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is Mathorium a free alternative to Mathpix?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Mathorium does the same core job — turning a picture of an equation into LaTeX — with no account, no API key, no page quota and no subscription. Recognition runs in your browser using the Pix2Text model, so there is no per-image cost to pass on."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do my images get uploaded to a server?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Not for OCR. The offline engine downloads the model once and then recognises everything on your own device, so images never leave the browser. Cloud vision models are optional and only used if you pick one."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What can Mathorium export?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "LaTeX, MathML, Word-ready OMML, Markdown, HTML, plain text, JSON and SVG. Batch results can be exported together, and any single expression can be copied straight into Word, Overleaf or Notion."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does it read handwriting?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, for reasonably clear handwriting. Printed textbook and paper equations are the most accurate; for messy handwriting a cloud vision model usually does better, and you can switch engines per image."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does Mathorium work offline?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Once loaded it is installable as a PWA, and the OCR engine, the LaTeX renderer and the equation editor all work with no network. Only cloud AI chat and image generation need a connection."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+
+    <!-- Shell styling only. Everything here is thrown away with the shell, so it
+         is inline rather than in the stylesheet the app ships. -->
+    <style>
+      html, body { margin: 0; height: 100%; }
+      body {
+        background: #0a0e1a; color: #e2e8f0;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #mtr-boot {
+        min-height: 100%; box-sizing: border-box;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 18px; padding: 48px 24px; text-align: center;
+        background:
+          radial-gradient(900px 500px at 12% -8%, rgb(124 58 237 / 0.16), transparent 60%),
+          radial-gradient(800px 500px at 100% 0%, rgb(37 99 235 / 0.14), transparent 55%);
+      }
+      #mtr-boot h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); font-weight: 800; letter-spacing: -0.02em; }
+      #mtr-boot .mtr-grad {
+        background: linear-gradient(135deg, #a78bfa, #818cf8, #60a5fa);
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      }
+      #mtr-boot p { margin: 0; max-width: 62ch; line-height: 1.6; color: #94a3b8; font-size: clamp(14px, 2vw, 17px); }
+      #mtr-boot ul { margin: 4px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 70ch; }
+      #mtr-boot li { border: 1px solid rgb(255 255 255 / 0.12); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: #cbd5e1; }
+      #mtr-boot .mtr-spin { width: 26px; height: 26px; border-radius: 999px; border: 3px solid rgb(255 255 255 / 0.14); border-top-color: #a78bfa; animation: mtrSpin 0.9s linear infinite; }
+      #mtr-boot h2 { margin: 22px 0 0; font-size: 15px; font-weight: 600; color: #cbd5e1; }
+      #mtr-boot dl { margin: 8px 0 0; max-width: 66ch; text-align: left; color: #94a3b8; font-size: 13px; line-height: 1.55; }
+      #mtr-boot dt { font-weight: 600; color: #cbd5e1; margin-top: 10px; }
+      #mtr-boot dd { margin: 2px 0 0; }
+      @keyframes mtrSpin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { #mtr-boot .mtr-spin { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <!-- The boot shell lives inside #root on purpose: React's createRoot()
+         clears its container on first commit, so this is removed by the mount
+         with nothing to clean up. It is what a visitor looks at while a 17 MB
+         bundle parses, and what a crawler reads instead of an empty div. -->
+    <div id="root">
+      <div id="mtr-boot">
+        <img src="./icon.svg" width="72" height="72" alt="Mathorium logo" />
+        <h1><span class="mtr-grad">Mathorium</span></h1>
+        <p>
+          <strong>Free AI math OCR.</strong> Convert an image, a screenshot, a photo of a textbook or your own
+          handwriting into <strong>LaTeX</strong>, <strong>MathML</strong>, Word or Markdown — in batches, in your
+          browser. Recognition runs on-device with Pix2Text, so there is no API key, no account and no upload. It is
+          the open, genuinely free <strong>Mathpix alternative</strong>.
+        </p>
+        <ul>
+          <li>Image → LaTeX</li>
+          <li>Handwriting → LaTeX</li>
+          <li>PDF screenshot → MathML</li>
+          <li>Export to Word</li>
+          <li>Batch + ZIP</li>
+          <li>Offline OCR</li>
+          <li>AI math chat</li>
+          <li>Equation editor</li>
+        </ul>
+        <div class="mtr-spin" role="status" aria-label="Loading Mathorium"></div>
+        <!-- Verbatim from the FAQPage block above, deliberately. Google requires
+             marked-up FAQ content to be visible on the page; paraphrasing it here
+             would make the schema describe copy the page never shows. -->
+        <h2>Frequently asked</h2>
+        <dl>
+          <dt>Is Mathorium a free alternative to Mathpix?</dt>
+          <dd>
+            Yes. Mathorium does the same core job — turning a picture of an equation into LaTeX — with no account, no
+            API key, no page quota and no subscription. Recognition runs in your browser using the Pix2Text model, so
+            there is no per-image cost to pass on.
+          </dd>
+          <dt>Do my images get uploaded to a server?</dt>
+          <dd>
+            Not for OCR. The offline engine downloads the model once and then recognises everything on your own device,
+            so images never leave the browser. Cloud vision models are optional and only used if you pick one.
+          </dd>
+          <dt>What can Mathorium export?</dt>
+          <dd>
+            LaTeX, MathML, Word-ready OMML, Markdown, HTML, plain text, JSON and SVG. Batch results can be exported
+            together, and any single expression can be copied straight into Word, Overleaf or Notion.
+          </dd>
+          <dt>Does it read handwriting?</dt>
+          <dd>
+            Yes, for reasonably clear handwriting. Printed textbook and paper equations are the most accurate; for messy
+            handwriting a cloud vision model usually does better, and you can switch engines per image.
+          </dd>
+          <dt>Does Mathorium work offline?</dt>
+          <dd>
+            Yes. Once loaded it is installable as a PWA, and the OCR engine, the LaTeX renderer and the equation editor
+            all work with no network. Only cloud AI chat and image generation need a connection.
+          </dd>
+        </dl>
+      </div>
+    </div>
+    <noscript>
+      <p style="padding: 24px; font-family: system-ui, sans-serif; color: #e2e8f0">
+        Mathorium is a free AI math OCR studio that converts images and handwriting into LaTeX, MathML and Word.
+        It runs entirely in the browser, so JavaScript must be enabled.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

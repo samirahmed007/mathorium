@@ -1,0 +1,44 @@
+{
+  "name": "Mathorium — Free AI Math OCR, LaTeX & MathML Studio",
+  "short_name": "Mathorium",
+  "description": "Free AI math OCR. Convert images, handwriting and PDF screenshots to LaTeX, MathML and Word — batch, offline-capable, no API key. The open Mathpix alternative.",
+  "version": "9.0.0",
+  "id": "/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "orientation": "any",
+  "background_color": "#0a0e1a",
+  "theme_color": "#7c3aed",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "education", "utilities"],
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Convert an image to LaTeX",
+      "short_name": "Convert",
+      "url": "./?tab=convert",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Ask the math assistant",
+      "short_name": "Chat",
+      "url": "./?tab=chat",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Write an equation",
+      "short_name": "MathType",
+      "url": "./?tab=mathtype",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+# Normalise text on commit, check out with the platform's own endings.
+* text=auto
+
+# ── Binary. Never touch these. ────────────────────────────────────────────────
+# Line-ending normalisation on a .onnx or .wasm file rewrites bytes inside the
+# weights and the model then fails to load — with a parse error that points at
+# the file rather than at git, which makes it a genuinely expensive bug to
+# track down. Marking them binary also keeps them out of diffs.
+*.onnx    binary
+*.wasm    binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.gguf    binary
+*.zip     binary
+
+# ── Text, explicitly ──────────────────────────────────────────────────────────
+*.ts      text
+*.tsx     text
+*.js      text
+*.mjs     text
+*.json    text
+*.css     text
+*.html    text
+*.md      text
+*.svg     text
+*.xml     text
+*.txt     text
+
+# tokenizer.json is a 2 MB single-line vocabulary. Diffing it is meaningless.
+public/models/**/tokenizer.json  -diff
+
+# ── Keep the repo's own scaffolding out of source archives ────────────────────
+.gitattributes  export-ignore
+.gitignore      export-ignore
+scripts/        export-ignore
