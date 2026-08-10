@@ -115,6 +115,25 @@ check(real5xx.status === 503 && real5xx.header === "origin",
   "a 5xx the origin genuinely sent is relayed and marked as such",
   `${real5xx.status}, x-mathorium-proxy: ${real5xx.header ?? "(absent)"}`);
 
+console.log("\n=== streamed completions survive the 25 s edge ceiling ===");
+// The ceiling is reachable only by a request that sits silent for 25 s — a
+// non-streaming completion. Asking for a stream moves the first byte into the
+// first second, and the ceiling stops mattering. Pollinations is keyless, so
+// this runs without a user key.
+const streamed = await page.evaluate(async () => {
+  const t0 = performance.now();
+  const r = await fetch("/api/proxy?url=" + encodeURIComponent("https://text.pollinations.ai/openai"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "openai", messages: [{ role: "user", content: "Reply with exactly: OK" }], stream: true, max_tokens: 8 }),
+  });
+  const text = await r.text();
+  return { status: r.status, ms: Math.round(performance.now() - t0), dataLines: (text.match(/^data: /gm) || []).length };
+});
+check(streamed.status === 200 && streamed.dataLines >= 1,
+  "a streamed completion relays SSE chunk by chunk through tier 1",
+  `${streamed.status} in ${streamed.ms} ms, ${streamed.dataLines} data: lines`);
+
 console.log("\n=== SSRF guard ===");
 const ssrf = await page.evaluate(async () => {
   const r = await fetch("/api/proxy?url=" + encodeURIComponent("http://169.254.169.254/latest/meta-data/"));

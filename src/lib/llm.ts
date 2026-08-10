@@ -418,6 +418,29 @@ async function chatCompletionSingle(args: ChatArgs): Promise<string> {
   const isLocal = isLocalhost(url);
   const allowProxy = settings.autoCorsProxy !== false && !isLocal;
 
+  /**
+   * Ask the provider to stream even though this function returns one string.
+   *
+   * The built-in proxy runs on Vercel's edge runtime, which must emit its first
+   * byte within 25 seconds or the gateway kills the function and returns a 504.
+   * A non-streaming completion emits nothing until the model has finished, so a
+   * large model on a cold start blows through it — that is the whole reason
+   * NVIDIA NIM "worked yesterday and not today" when the deploy gained a real
+   * serverless function and tier 1 started winning the route order.
+   *
+   * Streaming moves the deadline somewhere it cannot be missed: the first SSE
+   * chunk arrives in about a second, and once bytes are flowing the 25 s ceiling
+   * no longer applies. Measured against the deployment — a 40-second streamed
+   * response completes with status 200, first byte at 1.1 s (2026-08-10).
+   *
+   * Only done when the request is actually going to be proxied. A direct call
+   * has no such ceiling and is left exactly as it was, because reassembling a
+   * stream is strictly more code paths to be wrong in.
+   */
+  const willProxy = allowProxy || !!manualPrefix;
+  const streamToBeatTheGatewayLimit = willProxy && provider.enableStream !== false;
+  if (streamToBeatTheGatewayLimit) body.stream = true;
+
   let res!: Response;
 
   // A 429 on a keyless shared pool is usually momentary rather than a real quota
@@ -534,9 +557,70 @@ async function chatCompletionSingle(args: ChatArgs): Promise<string> {
     throw new Error(`${provider.name} error ${res.status}: ${detail || res.statusText}`);
   }
 
+  // ── The proxied path asked for a stream so the first byte lands inside the
+  // edge runtime's 25 s window (see `body.stream` above) — so the reply may be
+  // one JSON body or a stream of SSE chunks, and must be reassembled the same
+  // way the UI's stream parser does when it cannot know which it got. ──
+  let content: unknown;
+  let finishReason: string | null = null;
+  // `body.stream` is a request, not a guarantee: a provider is free to ignore it
+  // and answer with one JSON object. Parsing that with the SSE reader would find
+  // no `data:` lines and return an empty string — a silent wrong answer, which is
+  // worse than the timeout this is fixing. So branch on what actually came back.
+  const isEventStream = (res.headers.get("content-type") || "").includes("text/event-stream");
+  if (body.stream && isEventStream) {
+    if (!res.body) throw new Error("Empty response body from " + provider.name + ".");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let text = "";
+    let sawContent = false;
+    let reasoningBuf = "";
+    const finish = () => {
+      args.onFinishReason?.(finishReason);
+      return sawContent ? text : reasoningBuf || text;
+    };
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === "[DONE]") return finish();
+          try {
+            const json = JSON.parse(payload);
+            const choice = json?.choices?.[0];
+            // Arrives on the final chunk; "length" is what drives auto-continuation.
+            const fr = choice?.finish_reason ?? choice?.finishReason;
+            if (typeof fr === "string" && fr) finishReason = fr;
+            const delta = choice?.delta?.content ?? choice?.text ?? "";
+            if (typeof delta === "string" && delta) {
+              sawContent = true;
+              text += delta;
+              continue;
+            }
+            const reasoning = choice?.delta?.reasoning_content ?? choice?.delta?.reasoning;
+            if (typeof reasoning === "string" && reasoning && !sawContent) reasoningBuf += reasoning;
+          } catch {
+            /* skip malformed chunk */
+          }
+        }
+      }
+    } finally {
+      reader.cancel().catch(() => {});
+    }
+    return finish();
+  }
+
+  // ── Non-streamed: the response is one JSON body. ──
   const data = await res.json();
   const msg0 = data?.choices?.[0]?.message;
-  let content: unknown = msg0?.content;
+  content = msg0?.content;
   // Reasoning models sometimes put everything in a reasoning field and leave
   // `content` null — Pollinations' gpt-oss-20b does this, and DeepSeek-style
   // endpoints use `reasoning_content`. Treating that as a bad response shape

@@ -91,7 +91,7 @@ export function CorsProxyPanel({
           n={2}
           name="Public proxies"
           on={!manual && (state.sameOrigin !== true || state.sameOriginDegraded)}
-          detail={`${PUBLIC_PROXIES.filter((p) => p.post && p.headers).length} relays that forward POST bodies and auth headers. Used when the built-in one is unavailable or times out. Your API key passes through a third party, so prefer tier 1 or your own.`}
+          detail={`${PUBLIC_PROXIES.filter((p) => p.post && p.headers).length} relays that forward POST bodies and auth headers. Used when the built-in one is unavailable — but as of August 2026 most free public relays have shut down, gone keyed or started refusing anonymous traffic, so treat this as a long shot rather than a safety net. Your API key would pass through a third party; prefer tier 1 or your own.`}
         />
         <Tier n={3} name="Your own prefix" on={!!manual} detail={manual || "Not set — see below."} />
       </div>

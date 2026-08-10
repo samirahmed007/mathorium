@@ -56,6 +56,19 @@ export interface PublicProxy {
  * Ordered best-first. Every entry forwards POST *and* headers, because a proxy
  * that cannot do both is useless for an authenticated chat completion — that was
  * the whole defect in the previous list.
+ *
+ * Re-checked 2026-08-10, from a browser on the deployed origin and again
+ * server-side, and the honest result is that this tier can no longer be relied
+ * on: cors.isomorphic-git.org now answers 403 behind Cloudflare,
+ * corsproxy.garmeeh.workers.dev no longer resolves, and api.cors.lol returns 429
+ * to anonymous traffic. Every free replacement tried (corsproxy.io, cors.eu.org,
+ * corsfix, allorigins, codetabs, thingproxy, cors-anywhere) is keyed, blocked or
+ * gone. The free public relay, as a category, has largely stopped existing.
+ *
+ * They are kept because they cost nothing when tier 1 is present and are the
+ * only option for a `file://` open — but tier 1 is now the load-bearing route,
+ * which is why the streaming fix in llm.ts matters rather than being an
+ * optimisation.
  */
 export const PUBLIC_PROXIES: PublicProxy[] = [
   {
