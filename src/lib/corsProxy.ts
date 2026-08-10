@@ -109,6 +109,12 @@ export interface ProxyState {
   count: number;
   /** Whether `/api/proxy` answered a probe. null = not probed yet. */
   sameOrigin: boolean | null;
+  /**
+   * Tier 1 is deployed but timed out or 5xx'd underneath us, so tier 2 is doing
+   * the work. Kept so the panel can say so instead of showing "1 · in use" for
+   * a route that is not carrying anything.
+   */
+  sameOriginDegraded: boolean;
 }
 
 const state: ProxyState = {
@@ -118,6 +124,7 @@ const state: ProxyState = {
   lastProxyId: null,
   count: 0,
   sameOrigin: null,
+  sameOriginDegraded: false,
 };
 
 type Listener = (s: ProxyState) => void;
@@ -225,6 +232,29 @@ export function isLocalhost(url: string): boolean {
   return /^https?:\/\/(localhost|127\.|0\.0\.0\.0|\[::1\])/i.test(url);
 }
 
+/**
+ * Did tier 1 fail *underneath* our function, rather than relay an answer?
+ *
+ * This is the difference between "NVIDIA said 504" — which is a real answer and
+ * must be shown to the user — and "Vercel killed our edge function", which is an
+ * infrastructure limit the user cannot act on and the public pool does not share.
+ *
+ * The edge runtime must emit a first byte within 25 seconds. A non-streaming
+ * completion emits nothing until the model has finished generating, so a large
+ * model on a cold start reliably exceeds it and the gateway returns 504
+ * FUNCTION_INVOCATION_TIMEOUT. Verified live: a 10 s upstream returns 200 at
+ * 10.9 s, a 30 s upstream returns 504 at 25.1 s (2026-08-10).
+ *
+ * Treating that as the provider's reply is what made NVIDIA look broken while
+ * the model list — a fast GET well inside the window — kept working. The tell is
+ * PASSTHROUGH_HEADER: api/proxy.ts sets it on everything it relays, so a 5xx
+ * without it never reached the origin.
+ */
+function isTierOneFailure(res: Response): boolean {
+  if (res.ok || res.status < 500) return false;
+  return res.headers.get("x-mathorium-proxy") !== "origin";
+}
+
 export interface ProxyOpts {
   /** Caller allows proxying at all (Settings toggle, not-localhost, etc). */
   allowProxy: boolean;
@@ -289,15 +319,20 @@ export async function fetchWithProxyFallback(
     try {
       // Tier 1.
       if (await probeSameOriginProxy()) {
-        try {
-          const res = await fetch(sameOriginProxyUrl(url), init);
+        // `.catch` rather than try/catch because a thrown network error and a
+        // gateway 5xx have to be handled identically here: both mean tier 1 did
+        // not deliver, and neither is the provider's answer.
+        const res = await fetch(sameOriginProxyUrl(url), init).catch(() => null);
+        if (res && !isTierOneFailure(res)) {
           state.lastTier = "same-origin";
           state.lastProxyId = null;
+          state.sameOriginDegraded = false;
           state.count++;
           return { res, proxied: true, tier: "same-origin" };
-        } catch {
-          /* fall through to the public pool */
         }
+        // Remembered so the panel stops claiming tier 1 is "in use" when every
+        // request is really being carried by tier 2.
+        state.sameOriginDegraded = true;
       }
 
       // Tier 2. Skip proxies that cannot carry what this request needs rather

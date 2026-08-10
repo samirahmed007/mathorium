@@ -124,7 +124,17 @@ function ProviderEditor({ provider, isNew, onClose }: { provider: Provider; isNe
     setTesting(true);
     setTestResult("");
     try {
-      const model = draft.visionDefault || draft.models[0]?.id || "";
+      // The probe below sends text and no image, so the text default is what it
+      // should exercise. Testing `visionDefault` picked the heaviest model the
+      // provider has for a message that cannot use it — on NVIDIA that meant a
+      // 90B vision model answering "Reply with exactly: OK", slowly enough to
+      // trip the proxy's 25 s gateway limit and report a working key as broken.
+      const model =
+        draft.textDefault ||
+        draft.models.find((m) => !m.vision)?.id ||
+        draft.visionDefault ||
+        draft.models[0]?.id ||
+        "";
       const out = await testConnection({
         provider: draft,
         model,

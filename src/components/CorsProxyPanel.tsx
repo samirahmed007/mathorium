@@ -78,18 +78,20 @@ export function CorsProxyPanel({
         <Tier
           n={1}
           name="Built-in proxy"
-          on={!manual && state.sameOrigin === true}
+          on={!manual && state.sameOrigin === true && !state.sameOriginDegraded}
           detail={
-            state.sameOrigin
-              ? "A serverless function deployed with this app, on this same origin. No third party sees your key, and nothing keeps running between requests — it starts per request and stops when the reply is sent."
-              : "Not deployed here. Present on the hosted app; absent when the built file is opened from disk or a static host with no functions."
+            state.sameOriginDegraded
+              ? "Deployed, but a request timed out in it — the host gives it 25 seconds to start replying and a slow model can take longer. Tier 2 is carrying requests instead. Streaming replies still use this route."
+              : state.sameOrigin
+                ? "A serverless function deployed with this app, on this same origin. No third party sees your key, and nothing keeps running between requests — it starts per request and stops when the reply is sent."
+                : "Not deployed here. Present on the hosted app; absent when the built file is opened from disk or a static host with no functions."
           }
         />
         <Tier
           n={2}
           name="Public proxies"
-          on={!manual && state.sameOrigin !== true}
-          detail={`${PUBLIC_PROXIES.filter((p) => p.post && p.headers).length} relays that forward POST bodies and auth headers. Used only when the built-in one is unavailable. Your API key passes through a third party, so prefer tier 1 or your own.`}
+          on={!manual && (state.sameOrigin !== true || state.sameOriginDegraded)}
+          detail={`${PUBLIC_PROXIES.filter((p) => p.post && p.headers).length} relays that forward POST bodies and auth headers. Used when the built-in one is unavailable or times out. Your API key passes through a third party, so prefer tier 1 or your own.`}
         />
         <Tier n={3} name="Your own prefix" on={!!manual} detail={manual || "Not set — see below."} />
       </div>

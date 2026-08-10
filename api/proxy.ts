@@ -45,7 +45,27 @@ const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
   "access-control-allow-headers": "*",
   "access-control-max-age": "86400",
+  // Without this the client cannot read PASSTHROUGH_HEADER on a cross-origin
+  // call — non-safelisted response headers are hidden from JS unless exposed.
+  // Same-origin calls (the normal case) would see it anyway; this covers the
+  // app being pointed at someone else's deployment via a manual prefix.
+  "access-control-expose-headers": "*",
 };
+
+/**
+ * Set only on a response this function actually relayed from the origin.
+ *
+ * It exists so the client can tell two very different 5xx apart. A 502 or 504
+ * arriving from `/api/proxy` may be the origin's own answer, faithfully passed
+ * on — or it may be the platform underneath this function, which the code here
+ * never gets to see or annotate. The edge runtime has to emit its first byte
+ * within 25 seconds, and a non-streaming completion from a large model can take
+ * longer than that, at which point Vercel returns a 504 of its own and this
+ * handler is simply killed. Presence of this header means "the origin said
+ * this"; absence on a 5xx means "we failed before the origin answered", and the
+ * client should try another route rather than report it as the provider's fault.
+ */
+const PASSTHROUGH_HEADER = "x-mathorium-proxy";
 
 /**
  * Only proxy to public HTTP(S) endpoints.
@@ -134,6 +154,8 @@ export default async function handler(req: Request): Promise<Response> {
 
     const out = new Headers(upstream.headers);
     for (const [k, v] of Object.entries(CORS_HEADERS)) out.set(k, v);
+    // The origin answered, whatever it answered with. See PASSTHROUGH_HEADER.
+    out.set(PASSTHROUGH_HEADER, "origin");
     // The origin's own CORS answer is irrelevant now and would collide with ours.
     out.delete("access-control-allow-credentials");
     // Content-encoding was already undone by fetch; leaving the header on makes
