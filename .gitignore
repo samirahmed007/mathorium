@@ -65,3 +65,6 @@ pnpm-debug.log*
 #                   would silently lose it, and the whole point is that a fresh
 #                   `git clone && npm i && npm run build` produces the real app.
 # public/ort/     — same reasoning for the onnxruntime-web WASM binaries.
+
+.vercel
+.env*
