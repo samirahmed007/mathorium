@@ -135,6 +135,8 @@ export type ConversionMode = "expression" | "mixed" | "lines";
 export interface ConvertResult {
   id: string;
   fileName: string;
+  displayName?: string;
+  favorite?: boolean;
   dataUrl: string;
   status: JobStatus;
   raw?: string;
