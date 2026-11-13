@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StoreProvider, useStore } from "@/store";
 import type { ConvertResult, ThemeChoice } from "@/types";
 import { cn } from "@/utils/cn";
@@ -62,6 +62,9 @@ function Shell() {
   const [results, setResults] = useState<ConvertResult[]>([]);
   const [libraryReady, setLibraryReady] = useState(false);
   const [desktopCaptures, setDesktopCaptures] = useState<Array<{id:string;dataUrl:string;fileName:string}>>([]);
+  const consumeDesktopCapture = useCallback((id: string) => {
+    setDesktopCaptures(prev => prev.filter(item => item.id !== id));
+  }, []);
   const [exportOpen, setExportOpen] = useState(false);
   const [latexTarget, setLatexTarget] = useState<{ resultId: string; exprIndex: number } | null>(null);
   const [mathTypeTarget, setMathTypeTarget] = useState<{ resultId: string; exprIndex: number } | null>(null);
@@ -315,7 +318,7 @@ function Shell() {
             onToggleFavorite={(id) => setResults(prev => prev.map(item => item.id === id ? {...item,favorite:!item.favorite} : item))}
             onCopy={(latex) => { if (window.mathoriumDesktop?.isDesktop) void window.mathoriumDesktop.writeClipboard(latex); else void navigator.clipboard.writeText(latex); }}
             onEditLatex={editInLatex} onEditMathType={editInMathType} />}
-          {tab === "convert" && <ConvertTab results={results} setResults={setResults} onExport={() => setExportOpen(true)} onEditInLatex={editInLatex} onEditInMathType={editInMathType} desktopCaptures={desktopCaptures} onDesktopCaptureConsumed={(id) => setDesktopCaptures(prev => prev.filter(item => item.id !== id))} />}
+          {tab === "convert" && <ConvertTab results={results} setResults={setResults} onExport={() => setExportOpen(true)} onEditInLatex={editInLatex} onEditInMathType={editInMathType} desktopCaptures={desktopCaptures} onDesktopCaptureConsumed={consumeDesktopCapture} />}
           {tab === "latex" && <LatexTab results={results} setResults={setResults} target={latexTarget} setTarget={setLatexTarget} onOpenInMathType={openInMathType} />}
           {tab === "mathtype" && <MathTypeTab results={results} setResults={setResults} target={mathTypeTarget} setTarget={setMathTypeTarget} seed={mathTypeSeed} onSeedConsumed={() => setMathTypeSeed(null)} />}
           {tab === "chat" && <ChatTab />}
