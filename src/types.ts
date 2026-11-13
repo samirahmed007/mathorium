@@ -84,7 +84,8 @@ export interface Settings {
    */
   convertEngine: "local" | "cloud" | "both";
   useLocalOCR: boolean; // legacy mirror of convertEngine != "cloud" (kept for older persisted state)
-  localOCRModel: "auto" | "pix2text" | "tesseract"; // which local OCR engine to use
+  localOCRModel: "auto" | "pix2text" | "texteller";
+  recognitionQuality: "fast" | "balanced" | "high-accuracy"; // which local OCR engine to use
   localOCRFirst: boolean; // legacy mirror of convertEngine != "cloud"
   enhancedMathml: boolean; // use multi-engine LaTeX→MathML (temml + latex2mathml)
   // v7 additions
