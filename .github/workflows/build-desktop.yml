@@ -36,6 +36,8 @@ jobs:
         run: python scripts/fetch-desktop-models.py
       - name: Verify both offline model bundles
         run: npm run desktop:verify
+      - name: Type-check desktop and renderer TypeScript
+        run: npx tsc --noEmit
       - name: Build Mathorium renderer
         run: npm run build
       - name: Package Windows x64 installer and portable EXE
