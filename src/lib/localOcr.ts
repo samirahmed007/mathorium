@@ -53,7 +53,7 @@ export async function runLocalOCR(dataUrl:string,opts:LocalOCROpts={}):Promise<L
   const model=normalizeLocalOCRModel(opts.model), started=performance.now();
   if(opts.signal?.aborted)throw new Error("Recognition cancelled.");
   if(model==="tesseract") {
-    if(typeof window!=="undefined" && window.mathoriumDesktop?.isDesktop)throw new Error("Tesseract is not available in Mathorium Desktop. Select Pix2Text MFR or TexTeller INT8.");
+    if(typeof window!=="undefined" && window.mathoriumDesktop?.isDesktop)throw new Error("Tesseract is not available in Mathorium Desktop. Select Pix2Text MFR or TexTeller 3.0 INT8.");
     const worker=await loadWebTesseract(opts.onProgress);
     if(opts.signal?.aborted)throw new Error("Recognition cancelled.");
     const {data}=await worker.recognize(dataUrl);
@@ -63,7 +63,7 @@ export async function runLocalOCR(dataUrl:string,opts:LocalOCROpts={}):Promise<L
   }
   if(model==="texteller") {
     const result=await runTexTellerOCR(dataUrl,{signal:opts.signal,onProgress:opts.onProgress,quality:opts.quality||"balanced"});
-    if(!result.text.trim())throw new Error("TexTeller returned an empty result.");
+    if(!result.text.trim())throw new Error("TexTeller3 returned an empty result.");
     return {text:result.text.trim(),model:"TexTeller3 INT8 (offline)",backend:result.backend,isLatex:true,ms:Math.round(performance.now()-started),warnings:result.warnings};
   }
   await loadPix2Text({onProgress:opts.onProgress,signal:opts.signal});
@@ -94,7 +94,7 @@ export function isLocalOCRLoaded():boolean{return isPix2TextLoaded();}
 export function getLocalOCRBackendInfo():{threads:number;isolated:boolean}{return getPix2TextThreadInfo();}
 export function getModelSize(model:LocalOCRModel):string {
   const selected=normalizeLocalOCRModel(model);
-  return selected==="tesseract" ? "~10 MB (web-only, fetched on first use)" : selected==="texteller" ? "~316 MB INT8 model + tokenizer/configuration (bundled)" : "~62 MB ONNX weights + tokenizer/configuration (bundled)";
+  return selected==="tesseract" ? "~10 MB (web-only, fetched on first use)" : selected==="texteller" ? "~316 MB TexTeller3 INT8 model + tokenizer/configuration (bundled)" : "~62 MB ONNX weights + tokenizer/configuration (bundled)";
 }
 export async function unloadLocalOCR():Promise<void>{
   await disposePix2Text();await unloadTexTeller();
