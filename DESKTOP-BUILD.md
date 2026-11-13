@@ -32,7 +32,7 @@ Requires Node.js 22+, Python 3.12+, and Internet access during dependency and mo
 5. Run npm run build.
 6. Run npx electron-builder --win nsis portable --x64 --publish never.
 
-The installed application does not download model files. The build-time script resolves an immutable Hugging Face revision, fetches only the INT8 encoder/decoder and required configuration/tokenizer resources, maps their local names for the Transformers.js q8 resolver, and writes SHA-256 details to public/models/manifest.json.
+The installed application does not download model files. The build-time script is pinned to Hugging Face commit `9727784d91d7f8437dc7140941c4335284ce075e`, fetches only the INT8 encoder/decoder and required configuration/tokenizer resources, maps their local names for the Transformers.js q8 resolver, and writes SHA-256 details to public/models/manifest.json.
 
 ## Bundled models
 
