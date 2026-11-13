@@ -64,7 +64,7 @@ export async function runLocalOCR(dataUrl:string,opts:LocalOCROpts={}):Promise<L
   if(model==="texteller") {
     const result=await runTexTellerOCR(dataUrl,{signal:opts.signal,onProgress:opts.onProgress,quality:opts.quality||"balanced"});
     if(!result.text.trim())throw new Error("TexTeller returned an empty result.");
-    return {text:result.text.trim(),model:"TexTeller INT8 (offline)",backend:result.backend,isLatex:true,ms:Math.round(performance.now()-started),warnings:result.warnings};
+    return {text:result.text.trim(),model:"TexTeller3 INT8 (offline)",backend:result.backend,isLatex:true,ms:Math.round(performance.now()-started),warnings:result.warnings};
   }
   await loadPix2Text({onProgress:opts.onProgress,signal:opts.signal});
   if(opts.signal?.aborted)throw new Error("Recognition cancelled.");
