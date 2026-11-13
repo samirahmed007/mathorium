@@ -7,11 +7,11 @@ from datetime import datetime,timezone
 from huggingface_hub import model_info,snapshot_download
 ROOT=Path(__file__).resolve().parents[1]
 PUBLIC=ROOT/"public"; MODELS=PUBLIC/"models"; TARGET=MODELS/"texteller-int8"
-REPO="onnx-community/TexTeller-ONNX"
-REVISION="9727784d91d7f8437dc7140941c4335284ce075e"
-ALLOW=["config.json","generation_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","added_tokens.json","merges.txt","vocab.json","quantize_config.json","LICENSE","onnx/encoder_model_int8.onnx","onnx/decoder_model_int8.onnx"]
+REPO="onnx-community/TexTeller3-ONNX"
+REVISION="ed90c6164810242882ca90863bb85697a76f4841"
+ALLOW=["config.json","generation_config.json","preprocessor_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","added_tokens.json","merges.txt","vocab.json","quantize_config.json","LICENSE","onnx/encoder_model_quantized.onnx","onnx/decoder_model_merged_quantized.onnx"]
 OPTIONAL={"added_tokens.json","LICENSE"}
-LIMITS={"onnx/encoder_model_int8.onnx":80_000_000,"onnx/decoder_model_int8.onnx":210_000_000}
+LIMITS={"onnx/encoder_model_quantized.onnx":80_000_000,"onnx/decoder_model_merged_quantized.onnx":210_000_000}
 def digest(p:Path)->str:
  h=hashlib.sha256()
  with p.open("rb") as f:
@@ -31,16 +31,12 @@ def main():
    raise RuntimeError("Missing required upstream model file: "+rel)
   dst=TARGET/rel;dst.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src,dst)
   files[rel]={"bytes":dst.stat().st_size,"sha256":digest(dst)}
- for source,target in [("onnx/encoder_model_int8.onnx","onnx/encoder_model_quantized.onnx"),("onnx/decoder_model_int8.onnx","onnx/decoder_model_quantized.onnx")]:
-  src=TARGET/source
-  if src.stat().st_size<LIMITS[source]:raise RuntimeError("Weight file is too small (possible LFS pointer): "+source)
-  source_info=files.pop(source)
-  dst=TARGET/target
-  shutil.move(str(src),str(dst))
-  files[target]={"bytes":dst.stat().st_size,"sha256":digest(dst),"upstream_filename":source,"upstream_sha256":source_info["sha256"]}
- required=["config.json","generation_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","merges.txt","vocab.json","quantize_config.json","onnx/encoder_model_quantized.onnx","onnx/decoder_model_quantized.onnx"]
+ for rel,minimum in LIMITS.items():
+  file=TARGET/rel
+  if not file.is_file() or file.stat().st_size<minimum:raise RuntimeError("Quantized TexTeller3 weight is missing or unexpectedly small: "+rel)
+ required=["config.json","generation_config.json","preprocessor_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","merges.txt","vocab.json","quantize_config.json","onnx/encoder_model_quantized.onnx","onnx/decoder_model_merged_quantized.onnx"]
  missing=[f for f in required if not (TARGET/f).is_file()]
- if missing:raise RuntimeError("TexTeller package incomplete: "+", ".join(missing))
+ if missing:raise RuntimeError("TexTeller3 INT8 package incomplete: "+", ".join(missing))
  # Package the WASM files from the installed Transformers.js distribution; this
  # prevents the default CDN runtime path from being used by the desktop renderer.
  runtime_dist=ROOT/"node_modules"/"onnxruntime-web"/"dist"
@@ -57,12 +53,12 @@ def main():
   if not p.is_file() or p.stat().st_size<100:raise RuntimeError("Missing/truncated Pix2Text asset: "+rel)
   pix_files[rel]={"bytes":p.stat().st_size,"sha256":digest(p)}
  manifest={"schema":1,"product":"Mathorium Desktop","created_at":datetime.now(timezone.utc).isoformat(),
-  "texteller":{"repo_id":REPO,"revision":revision,"license":"Apache-2.0","quantization":"INT8","files":files},
+  "texteller3":{"repo_id":REPO,"revision":revision,"base_model":"Ji-Ha/TexTeller3","license":"Apache-2.0","quantization":"ONNX Q8/INT8","files":{rel:{"bytes":(TARGET/rel).stat().st_size,"sha256":digest(TARGET/rel)} for rel in required}},
   "pix2text":{"repo_id":"breezedeus/Pix2Text","bundled_recipe":"Existing Mathorium Pix2Text MFR recipe; do not change tokenizer/preprocessing/generation files independently.","files":pix_files},
   "runtime":{"transformers_js":"4.3.2","ort_wasm":sorted(p.name for p in ort.iterdir())}}
  (MODELS/"manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8")
- print("TexTeller INT8 pinned revision:",revision)
- print("Encoder bytes:",(TARGET/"onnx/encoder_model_quantized.onnx").stat().st_size)
- print("Decoder bytes:",(TARGET/"onnx/decoder_model_quantized.onnx").stat().st_size)
+ print("TexTeller3 INT8 pinned revision:",revision)
+ print("Encoder INT8 bytes:",(TARGET/"onnx/encoder_model_quantized.onnx").stat().st_size)
+ print("Merged decoder INT8 bytes:",(TARGET/"onnx/decoder_model_merged_quantized.onnx").stat().st_size)
  print("SHA-256 manifest written.")
 if __name__=="__main__":main()
