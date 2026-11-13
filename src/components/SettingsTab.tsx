@@ -79,6 +79,12 @@ export function SettingsTab() {
           <b className="text-cyan-300">Pix2Text MFR</b> converts an image of a formula straight to LaTeX. The model (~31 MB) ships inside the app, so it needs no API key, no account and no network — nothing leaves your machine. Runs on CPU via WebAssembly, so it works on low-end and Windows 10 machines with no GPU. MIT licensed.
         </p>
         <div className="space-y-2">
+          {window.mathoriumDesktop?.isDesktop && (
+            <label className="flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.02] p-3 text-xs">
+              <div><div className="font-medium text-slate-200">Automatically recognize imported images</div><div className="mt-1 text-[11px] text-slate-500">Wait for the complete import operation, then process the queue locally. Manual Convert remains available.</div></div>
+              <input type="checkbox" checked={settings.autoConvertAfterImport} onChange={(e) => updateSettings({ autoConvertAfterImport: e.target.checked })} className="mt-1 h-4 w-4 accent-violet-500" />
+            </label>
+          )}
           <Field label="Recognition quality" hint="mapped to each model's supported decoding settings">
             <Select value={settings.recognitionQuality} onChange={(e) => updateSettings({ recognitionQuality: e.target.value as any })}>
               <option value="fast">Fast</option><option value="balanced">Balanced</option><option value="high-accuracy">High Accuracy</option>
