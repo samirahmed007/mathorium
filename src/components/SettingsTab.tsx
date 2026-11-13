@@ -6,6 +6,7 @@ import { GgufLoader } from "./GgufLoader";
 import { CorsProxyPanel } from "./CorsProxyPanel";
 import { Badge, Button, Field, Select, TextArea } from "./ui";
 import { APP_VERSION } from "@/lib/version";
+import { DesktopSettingsSection } from "./DesktopSettingsSection";
 
 export function SettingsTab() {
   const { settings, updateSettings, resetProviders } = useStore();
@@ -14,8 +15,10 @@ export function SettingsTab() {
     <div className="max-w-3xl space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white">Settings · v{APP_VERSION}</h2>
-        <p className="text-xs text-slate-500">Tune conversion, chat, network, and the extraction prompt. New in v9.0: live model lists fetched per provider, a screen snip in Convert, image generation across the free providers, and rebuilt Light and System themes. From v8.3: a live thinking panel for reasoning models and syntax-highlighted code blocks. From v8: Agent Mode and local GGUF models loaded from disk.</p>
+        <p className="text-xs text-slate-500">Tune local mathematical recognition, editing, capture, appearance, storage and optional chat features. Desktop OCR runs only on the bundled Pix2Text or TexTeller engines.</p>
       </div>
+
+      {window.mathoriumDesktop?.isDesktop && <DesktopSettingsSection />}
 
       <AppearanceSection />
 
