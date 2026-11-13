@@ -29,7 +29,7 @@ async function loadConfig(progress?:Progress) {
   if(!response.ok)throw new Error("TexTeller model bundle is missing generation_config.json. Rebuild the desktop package with both model assets.");
   const config=await response.json();
   const reported=Number(config.max_new_tokens||config.max_length||config.decoder?.max_position_embeddings||1024);
-  modelLimit=Math.max(128,Math.min(2048,Number.isFinite(reported)?reported:512));
+  modelLimit=Math.max(128,Math.min(2048,(Number.isFinite(reported)?reported:512)-1));
   progress?.(0.08,"Checking bundled TexTeller INT8 files");
 }
 export async function preloadTexTeller(progress?:Progress):Promise<void> {
