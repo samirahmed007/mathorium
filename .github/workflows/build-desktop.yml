@@ -11,6 +11,9 @@ on:
       - "package.json"
       - "package-lock.json"
       - "vite.config.ts"
+concurrency:
+  group: mathorium-desktop-windows
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
