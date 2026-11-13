@@ -26,6 +26,7 @@ async function installProtocol() {
       const p=u.pathname || "/";
       let file;
       if(p.startsWith("/models/")) file=safePath(path.join(resources(),"models"),p.slice(8));
+      else if(p.startsWith("/electron/")) file=safePath(path.join(app.getAppPath(),"electron"),p.slice(10));
       else if(p.startsWith("/ort/")) file=safePath(path.join(resources(),"ort"),p.slice(5));
       else if(p.startsWith("/ort-hf/")) file=safePath(path.join(resources(),"ort-hf"),p.slice(8));
       else file=safePath(path.join(app.getAppPath(),"dist"),p==="/"?"index.html":p);
