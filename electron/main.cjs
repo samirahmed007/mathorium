@@ -90,7 +90,7 @@ function modelStatus() {
   const root=path.join(resources(),"models");
   const checks=(dir,files)=>({files:Object.fromEntries(files.map(f=>[f,fs.existsSync(path.join(root,dir,f))])),ready:files.every(f=>fs.existsSync(path.join(root,dir,f)))});
   const pix=checks("pix2text-mfr-quantized",["config.json","generation_config.json","preprocessor_config.json","tokenizer.json","onnx/encoder_model.onnx","onnx/decoder_model.onnx","onnx/decoder_model_int8.onnx"]);
-  const tex=checks("texteller-int8",["config.json","generation_config.json","preprocessor_config.json","tokenizer.json","tokenizer_config.json","onnx/encoder_model_quantized.onnx","onnx/decoder_model_quantized.onnx"]);
+  const tex=checks("texteller-int8",["config.json","generation_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","merges.txt","vocab.json","quantize_config.json","onnx/encoder_model_quantized.onnx","onnx/decoder_model_quantized.onnx"]);
   return {pix2text:pix,texteller:tex,complete:pix.ready&&tex.ready,ortWasm:fs.existsSync(path.join(resources(),"ort","ort-wasm-simd-threaded.wasm"))};
 }
 function createTray() {
