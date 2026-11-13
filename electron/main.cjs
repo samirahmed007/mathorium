@@ -65,7 +65,9 @@ async function startCapture() {
   mainWindow.hide();await new Promise(r=>setTimeout(r,180));
   try {
     const displays=screen.getAllDisplays();
-    const sources=await desktopCapturer.getSources({types:["screen"],thumbnailSize:{width:4096,height:4096},fetchWindowIcons:false});
+    const maxWidth=Math.max(...displays.map(d=>Math.ceil(d.bounds.width*d.scaleFactor)),1920);
+    const maxHeight=Math.max(...displays.map(d=>Math.ceil(d.bounds.height*d.scaleFactor)),1080);
+    const sources=await desktopCapturer.getSources({types:["screen"],thumbnailSize:{width:maxWidth,height:maxHeight},fetchWindowIcons:false});
     for(const display of displays) {
       const source=sources.find(s=>String(s.display_id)===String(display.id));
       if(!source||source.thumbnail.isEmpty())continue;
