@@ -1,12 +1,14 @@
 {
-  "name": "mathorium",
+  "name": "mathorium-desktop",
   "private": true,
-  "version": "9.0.0",
+  "version": "10.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "desktop:launch": "electron .",
+    "desktop:build": "npm run build && electron-builder --win nsis portable --x64 --publish never"
   },
   "dependencies": {
     "@types/jszip": "^3.4.0",
@@ -20,7 +22,8 @@
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "tailwind-merge": "3.4.0",
-    "temml": "^0.13.3"
+    "temml": "^0.13.3",
+    "@huggingface/transformers": "4.3.2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.17",
@@ -32,6 +35,70 @@
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "vite": "7.3.2",
-    "vite-plugin-singlefile": "2.3.0"
+    "vite-plugin-singlefile": "2.3.0",
+    "electron": "45.3.2",
+    "electron-builder": "26.18.1"
+  },
+  "main": "electron/main.cjs",
+  "author": "Samir Uddin Ahmed",
+  "description": "Mathorium Desktop — offline mathematical OCR and equation editing studio",
+  "build": {
+    "appId": "com.samirahmed.mathoriumdesktop",
+    "productName": "Mathorium Desktop",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!dist/models/**",
+      "!dist/ort/**",
+      "!dist/ort-hf/**"
+    ],
+    "extraResources": [
+      {
+        "from": "public/models",
+        "to": "models"
+      },
+      {
+        "from": "public/ort",
+        "to": "ort"
+      },
+      {
+        "from": "public/ort-hf",
+        "to": "ort-hf"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.${ext}"
+    },
+    "asar": true
   }
 }
