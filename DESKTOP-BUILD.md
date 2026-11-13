@@ -42,7 +42,7 @@ The prompts name both `TexTeller 3.0 INT8` and the `onnx-community/TexTeller-ONN
 ## Bundled models
 
 - Pix2Text MFR: the existing repository-tracked pix2text-mfr-quantized model directory, preserved as one recipe with its tokenizer, preprocessing and generation configuration.
-- TexTeller: onnx-community/TexTeller-ONNX, explicit encoder_model_int8.onnx and decoder_model_int8.onnx source files, with the original filenames and SHA-256 records retained in the model manifest.
+- TexTeller: onnx-community/TexTeller-ONNX, explicit encoder_model_int8.onnx and decoder_model_int8.onnx source files, renamed for the Transformers.js q8 resolver without duplicating the binary weights; the original upstream filenames and SHA-256 records are retained in the model manifest.
 - Transformers.js runtime WASM files: copied locally; CDN loading is disabled.
 - The separate TexTeller3-ONNX export is not mixed into this bundle.
 
