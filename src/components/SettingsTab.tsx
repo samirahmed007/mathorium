@@ -127,7 +127,7 @@ export function SettingsTab() {
                 <Select value={settings.localOCRModel} onChange={(e) => updateSettings({ localOCRModel: e.target.value as any })}>
                   <option value="auto">Pix2Text MFR — recommended for math ⭐</option>
                   <option value="pix2text">Pix2Text MFR (same model, pinned)</option>
-                  <option value="texteller">TexTeller INT8 — complex and long formulas</option>
+                  <option value="texteller">TexTeller 3.0 INT8 — complex and long formulas</option>
                   {!window.mathoriumDesktop?.isDesktop && <option value="tesseract">Tesseract.js — plain text only (web edition)</option>}
                 </Select>
               </Field>
@@ -138,7 +138,7 @@ export function SettingsTab() {
               )}
               {settings.localOCRModel === "texteller" && (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200">
-                  TexTeller uses the bundled INT8 encoder and decoder. It is loaded on demand, uses CPU/WASM by default, and never downloads model files at runtime.
+                  TexTeller 3 uses the bundled INT8 encoder and merged decoder. It is loaded on demand, uses CPU/WASM by default, and never downloads model files at runtime.
                 </div>
               )}
               <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-2.5 text-[11px] text-cyan-200/80">
