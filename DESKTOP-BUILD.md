@@ -11,7 +11,7 @@ This branch contains the first native desktop integration layer for the Mathoriu
 - Native screenshot import into the existing Convert queue.
 - Desktop OCR forced to local-only; cloud OCR is not used.
 - Existing Pix2Text MFR inference adapter retained.
-- TexTeller INT8 inference adapter using Transformers.js with remote model loading disabled.
+- TexTeller 3.0 INT8 ONNX inference adapter using Transformers.js with remote model loading disabled.
 - Fast, Balanced and High Accuracy options mapped to model decoding controls.
 - IndexedDB local Snip Library.
 - Settings for shortcut, model state, recognition quality and automatic conversion.
@@ -32,19 +32,12 @@ Requires Node.js 22+, Python 3.12+, and Internet access during dependency and mo
 5. Run npm run build.
 6. Run npx electron-builder --win nsis portable --x64 --publish never.
 
-The installed application does not download model files. The build-time script is pinned to Hugging Face commit `9727784d91d7f8437dc7140941c4335284ce075e`, fetches only the INT8 encoder/decoder and required configuration/tokenizer resources, maps their local names for the Transformers.js q8 resolver, and writes SHA-256 details to public/models/manifest.json.
+The installed application does not download model files. The build-time script is pinned to Hugging Face commit `ed90c6164810242882ca90863bb85697a76f4841`, fetches the TexTeller3 quantized encoder and merged decoder plus their matching processor, tokenizer and configuration files, and records SHA-256 hashes in public/models/manifest.json.
 
 
-## TexTeller 3.0 lineage caveat
+## Model provenance
 
-The prompts name both `TexTeller 3.0 INT8` and the `onnx-community/TexTeller-ONNX` INT8 export. The pinned ONNX export's published configuration identifies `OleehyO/TexTeller` as its base path. A distinct `onnx-community/TexTeller3-ONNX` export identifies `Ji-Ha/TexTeller3` as its base and does not list the same INT8 encoder/decoder pair. This branch follows the specific INT8 export URL supplied in the prompts and does not mix weights from the separate TexTeller3 export. Upstream does not unambiguously identify the pinned ONNX snapshot as a separately versioned “3.0 INT8” release; therefore the bundle should be described as the specified TexTeller ONNX INT8 snapshot unless its exact training-checkpoint lineage is independently confirmed.
-
-## Bundled models
-
-- Pix2Text MFR: the existing repository-tracked pix2text-mfr-quantized model directory, preserved as one recipe with its tokenizer, preprocessing and generation configuration.
-- TexTeller: onnx-community/TexTeller-ONNX, explicit encoder_model_int8.onnx and decoder_model_int8.onnx source files, renamed for the Transformers.js q8 resolver without duplicating the binary weights; the original upstream filenames and SHA-256 records are retained in the model manifest.
-- Transformers.js runtime WASM files: copied locally; CDN loading is disabled.
-- The separate TexTeller3-ONNX export is not mixed into this bundle.
+The TexTeller bundle is sourced from `onnx-community/TexTeller3-ONNX` at immutable revision `ed90c6164810242882ca90863bb85697a76f4841`. The model repository identifies the model as a conversion of `Ji-Ha/TexTeller3` and provides the quantized encoder, merged quantized decoder, and matching grayscale 448×448 preprocessing configuration. The app uses the Q8/INT8 ONNX variants with Transformers.js; the 8.5 GB repository contains other non-quantized variants that are not included.
 
 ## Verification boundary
 
