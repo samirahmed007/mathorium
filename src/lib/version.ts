@@ -9,10 +9,10 @@
  * `package.json` still carries its own copy because npm requires it there; the
  * build asserts the two agree rather than trying to import JSON at runtime.
  */
-export const APP_NAME = "Mathorium";
+export const APP_NAME = "Mathorium Desktop";
 
 /** Marketing version — what the UI shows. */
-export const APP_VERSION = "9.0";
+export const APP_VERSION = "10.0";
 
 /** Full semver, for the About dialog and export headers. */
 export const APP_BUILD = "10.0.0";
@@ -20,7 +20,7 @@ export const APP_BUILD = "10.0.0";
 /** "Mathorium 9.0" — the form used in prompts and document generators. */
 export const APP_LABEL = `${APP_NAME} ${APP_VERSION}`;
 
-export const APP_TAGLINE = "Free AI Math OCR & LaTeX / MathML Studio";
+export const APP_TAGLINE = "Offline Mathematical OCR & Equation Editing Studio";
 
 export const APP_AUTHOR = "Samir Uddin Ahmed";
 
