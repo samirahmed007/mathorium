@@ -62,7 +62,7 @@ def main():
   "runtime":{"transformers_js":"4.3.2","ort_wasm":sorted(p.name for p in ort.iterdir())}}
  (MODELS/"manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8")
  print("TexTeller INT8 pinned revision:",revision)
- print("Encoder bytes:",(TARGET/"onnx/encoder_model_int8.onnx").stat().st_size)
- print("Decoder bytes:",(TARGET/"onnx/decoder_model_int8.onnx").stat().st_size)
+ print("Encoder bytes:",(TARGET/"onnx/encoder_model_quantized.onnx").stat().st_size)
+ print("Decoder bytes:",(TARGET/"onnx/decoder_model_quantized.onnx").stat().st_size)
  print("SHA-256 manifest written.")
 if __name__=="__main__":main()
