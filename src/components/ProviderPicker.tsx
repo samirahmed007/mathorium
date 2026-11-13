@@ -24,7 +24,8 @@ const LOCAL_ENGINE_ID = "__pix2text_local__";
 const LOCAL_ENGINE_MODELS = [
   { id: "auto", label: "Pix2Text MFR — math ⭐" },
   { id: "pix2text", label: "Pix2Text MFR (pinned)" },
-  { id: "tesseract", label: "Tesseract.js — plain text only" },
+  { id: "texteller", label: "TexTeller INT8 — math" },
+  ...(window.mathoriumDesktop?.isDesktop ? [] : [{ id: "tesseract", label: "Tesseract.js — plain text only" }]),
 ];
 
 export function ProviderPicker({ mode = "text" }: { mode?: PickerMode }) {
@@ -173,7 +174,7 @@ export function ProviderPicker({ mode = "text" }: { mode?: PickerMode }) {
           value={localSelected ? settings.localOCRModel : activeModelId}
           onChange={(e) =>
             localSelected
-              ? updateSettings({ localOCRModel: e.target.value as "auto" | "pix2text" | "tesseract" })
+              ? updateSettings({ localOCRModel: e.target.value as "auto" | "pix2text" | "texteller" | "tesseract" })
               : setActiveModel(e.target.value)
           }
           className="h-9 min-w-0 py-0 text-xs sm:max-w-[210px]"
