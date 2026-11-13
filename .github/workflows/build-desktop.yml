@@ -63,12 +63,58 @@ jobs:
           $zip = Join-Path $PWD "Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip"
           Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -CompressionLevel Optimal -Force
           Get-Item $zip | Format-List Name,Length
-      - name: Upload source and model package before installer compression
+      - name: Split source and model package into download-safe parts
+        shell: pwsh
+        run: |
+          $zip = Join-Path $PWD "Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip"
+          $chunkBytes = 300MB
+          $input = [System.IO.File]::OpenRead($zip)
+          $buffer = New-Object byte[] (8MB)
+          $index = 1
+          try {
+            while ($input.Position -lt $input.Length) {
+              $part = "{0}.part{1:D2}" -f $zip, $index
+              $output = [System.IO.File]::Create($part)
+              try {
+                $remaining = [Math]::Min($chunkBytes, $input.Length - $input.Position)
+                while ($remaining -gt 0) {
+                  $read = $input.Read($buffer, 0, [int][Math]::Min($buffer.Length, $remaining))
+                  if ($read -le 0) { throw "Unexpected end of source ZIP while splitting." }
+                  $output.Write($buffer, 0, $read)
+                  $remaining -= $read
+                }
+              } finally { $output.Dispose() }
+              $index++
+            }
+          } finally { $input.Dispose() }
+          if (($index - 1) -gt 4) { throw "Source package requires too many parts." }
+      - name: Upload source and model package part 01
         uses: actions/upload-artifact@v4
         with:
-          name: Mathorium-Desktop-10.0.0-Source-Models-Windows-x64
-          path: Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip
-          if-no-files-found: error
+          name: Mathorium-Desktop-Source-Models-Part-01
+          path: Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip.part01
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload source and model package part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Source-Models-Part-02
+          path: Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip.part02
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload source and model package part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Source-Models-Part-03
+          path: Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip.part03
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload source and model package part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Source-Models-Part-04
+          path: Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip.part04
+          if-no-files-found: ignore
           retention-days: 30
       - name: Package Windows x64 installer and portable EXE
         run: npx electron-builder --win nsis portable --x64 --publish never
