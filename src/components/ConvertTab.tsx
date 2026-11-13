@@ -404,13 +404,13 @@ export function ConvertTab({
   // Desktop imports auto-start once the full import operation is complete.
   // Each ID is started at most once automatically; explicit retries remain manual.
   useEffect(() => {
-    if (!window.mathoriumDesktop?.isDesktop || running || importCountRef.current !== 0 || importRevision === 0) return;
+    if (!window.mathoriumDesktop?.isDesktop || !settings.autoConvertAfterImport || running || importCountRef.current !== 0 || importRevision === 0) return;
     const ids = results.filter((r) => r.status === "pending" && !autoStartedIds.current.has(r.id)).map((r) => r.id);
     if (!ids.length) return;
     ids.forEach((id) => autoStartedIds.current.add(id));
     const timer = window.setTimeout(() => { void processIds(ids); }, 20);
     return () => window.clearTimeout(timer);
-  }, [importRevision, results, running, processIds]);
+  }, [importRevision, results, running, processIds, settings.autoConvertAfterImport]);
 
   const processPending = useCallback(() => {
     const pending = results.filter((r) => r.status === "pending").map((r) => r.id);
