@@ -130,8 +130,6 @@ function pickThreadCount(): number {
 }
 
 /** onnxruntime-web's own WASM binaries, copied into `public/ort/` by the build. */
-const CDN_WASM_PATH = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/";
-
 function localWasmPath(): string {
   try {
     // baseURI-relative so the app still works when served from a sub-path.
@@ -141,8 +139,8 @@ function localWasmPath(): string {
   }
 }
 
-function configureORT(useCdn: boolean): void {
-  ort.env.wasm.wasmPaths = useCdn ? CDN_WASM_PATH : localWasmPath();
+function configureORT(): void {
+  ort.env.wasm.wasmPaths = localWasmPath();
   ort.env.wasm.numThreads = pickThreadCount();
   ort.env.logLevel = "error";
 }
@@ -666,22 +664,17 @@ export async function loadPix2Text(opts: Pix2TextLoadOpts = {}): Promise<Session
     );
     onProgress?.(0.5, "Initializing encoder...");
 
-    // Bundled WASM first (works offline / air-gapped); fall back to the CDN copy
-    // if the build didn't ship /ort/ for some reason.
+    // Desktop OCR is air-gapped: use only the packaged local WASM runtime.
+    // A missing or incompatible runtime is a hard, visible failure; never contact a CDN.
+    configureORT();
     let encoder: ort.InferenceSession;
     try {
-      configureORT(false);
       encoder = await ort.InferenceSession.create(encBuf, sessionOpts);
     } catch (e) {
-      configureORT(true);
-      try {
-        encoder = await ort.InferenceSession.create(encBuf, sessionOpts);
-      } catch {
-        throw new Error(
-          `ONNX runtime failed to start (${(e as Error)?.message || e}). ` +
-            `The WASM backend could not be loaded from ${localWasmPath()} or the CDN.`,
-        );
-      }
+      throw new Error(
+        `Bundled ONNX Runtime failed to start from ${localWasmPath()} (${(e as Error)?.message || e}). ` +
+          `Offline OCR will not attempt a network fallback. Repair or reinstall the local runtime assets.`,
+      );
     }
 
     let decoder: ort.InferenceSession | null = null;
