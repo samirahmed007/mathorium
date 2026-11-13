@@ -57,6 +57,7 @@ function tabFromUrl(): Tab {
 function Shell() {
   const [tab, setTab] = useState<Tab>(tabFromUrl);
   const [results, setResults] = useState<ConvertResult[]>([]);
+  const [desktopCapture, setDesktopCapture] = useState<{dataUrl:string;fileName:string}|null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [latexTarget, setLatexTarget] = useState<{ resultId: string; exprIndex: number } | null>(null);
   const [mathTypeTarget, setMathTypeTarget] = useState<{ resultId: string; exprIndex: number } | null>(null);
@@ -65,6 +66,18 @@ function Shell() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const { activeProvider, toggleTheme, setTheme, theme, resolvedTheme, pushToast, newConversation, settings, updateSettings } = useStore();
+
+  // Desktop OCR is deliberately local-only. Cloud chat/provider features remain
+  // separate, but screenshot bytes are never routed through them.
+  useEffect(() => {
+    const desktop = window.mathoriumDesktop;
+    if (!desktop?.isDesktop) return;
+    updateSettings({ convertEngine: "local", offlineEnabled: true });
+    return desktop.onCapture((capture) => {
+      setDesktopCapture({ dataUrl: capture.dataUrl, fileName: capture.fileName });
+      setTab("convert");
+    });
+  }, [updateSettings]);
 
   // Keep the address bar honest about which tool is open, so a tab can be
   // bookmarked or shared. `replaceState` rather than `pushState`: switching tabs
@@ -211,6 +224,7 @@ function Shell() {
               {THEME_ICON[theme]}
             </button>
             <ProviderPicker mode={tab === "convert" ? "vision" : "text"} />
+            {window.mathoriumDesktop?.isDesktop && <Button variant="primary" size="sm" onClick={() => void window.mathoriumDesktop?.startCapture()} title="Capture a formula anywhere on your screen (Ctrl+Alt+M)">▧ New Snip</Button>}
             <Button variant="success" size="sm" disabled={!doneCount} onClick={() => setExportOpen(true)} title="Export results (⌘E)">
               ⤓ Export{doneCount ? ` (${doneCount})` : ""}
             </Button>
@@ -265,7 +279,7 @@ function Shell() {
         </aside>
 
         <main className="min-w-0 flex-1 px-4 py-5 md:px-6">
-          {tab === "convert" && <ConvertTab results={results} setResults={setResults} onExport={() => setExportOpen(true)} onEditInLatex={editInLatex} onEditInMathType={editInMathType} />}
+          {tab === "convert" && <ConvertTab results={results} setResults={setResults} onExport={() => setExportOpen(true)} onEditInLatex={editInLatex} onEditInMathType={editInMathType} desktopCapture={desktopCapture} onDesktopCaptureConsumed={() => setDesktopCapture(null)} />}
           {tab === "latex" && <LatexTab results={results} setResults={setResults} target={latexTarget} setTarget={setLatexTarget} onOpenInMathType={openInMathType} />}
           {tab === "mathtype" && <MathTypeTab results={results} setResults={setResults} target={mathTypeTarget} setTarget={setMathTypeTarget} seed={mathTypeSeed} onSeedConsumed={() => setMathTypeSeed(null)} />}
           {tab === "chat" && <ChatTab />}
