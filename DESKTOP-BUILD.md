@@ -39,6 +39,20 @@ The installed application does not download model files. The build-time script i
 
 The TexTeller bundle is sourced from `onnx-community/TexTeller3-ONNX` at immutable revision `ed90c6164810242882ca90863bb85697a76f4841`. The model repository identifies the model as a conversion of `Ji-Ha/TexTeller3` and provides the quantized encoder, merged quantized decoder, and matching grayscale 448×448 preprocessing configuration. The app uses the Q8/INT8 ONNX variants with Transformers.js; the 8.5 GB repository contains other non-quantized variants that are not included.
 
+
+## Downloading and reconstructing the ZIP packages
+
+The Windows workflow uploads the source/model archive and the all-in-one Windows build as numbered parts because the complete ZIP is larger than a single downloadable artifact.
+
+1. Open the GitHub Actions run for this branch and download every artifact named `Mathorium-Desktop-Source-Models-Part-XX` or `Mathorium-Desktop-Complete-Part-XX`.
+2. Extract the downloaded artifact wrapper ZIPs. Put the extracted `.part01`, `.part02`, and subsequent files for one package into the same folder.
+3. From that folder, run the reconstruction script included in `scripts/join-package.ps1`:
+   - Complete application package: `powershell -ExecutionPolicy Bypass -File .\scripts\join-package.ps1`
+   - Source and models only: `powershell -ExecutionPolicy Bypass -File .\scripts\join-package.ps1 -BaseName "Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip"`
+4. The script writes the original ZIP and prints its SHA-256. Extract the reconstructed complete ZIP to access the NSIS installer and portable EXE.
+
+The GitHub Actions artifacts are retained for 30 days. The source/model-only archive contains the source project, built renderer, both offline model bundles and the local ONNX Runtime WASM files. The complete archive additionally contains the Windows installer and portable executable.
+
 ## Verification boundary
 
 The Windows workflow checks required model assets, minimum sizes, manifest revision, and local WASM runtime before creating installer and portable artifacts. It must still undergo real Windows app launch, model loading, CPU inference, OCR accuracy, high-DPI/multi-monitor capture, batch, PDF, clipboard, offline network-disconnection, installer and clean-machine tests before being called a complete accepted release.
