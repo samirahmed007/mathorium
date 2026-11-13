@@ -54,6 +54,12 @@ jobs:
           foreach ($name in @("package.json","package-lock.json","index.html","vite.config.ts","tsconfig.json","tsconfig.app.json","tsconfig.node.json","DESKTOP-BUILD.md","README.md")) {
             if (Test-Path $name) { Copy-Item -Path $name -Destination $stage -Force }
           }
+          # Vite copies public model files to dist. Keep only the canonical public copies
+          # in this source archive; Electron and the renderer are configured accordingly.
+          foreach ($duplicate in @("models","ort","ort-hf")) {
+            $path = Join-Path $stage ("dist\\" + $duplicate)
+            if (Test-Path $path) { Remove-Item $path -Recurse -Force }
+          }
           $zip = Join-Path $PWD "Mathorium-Desktop-10.0.0-Source-Models-Windows-x64.zip"
           Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -CompressionLevel Optimal -Force
           Get-Item $zip | Format-List Name,Length
@@ -83,6 +89,11 @@ jobs:
           foreach ($name in @("package.json","package-lock.json","index.html","vite.config.ts","tsconfig.json","tsconfig.app.json","tsconfig.node.json","DESKTOP-BUILD.md","README.md")) {
             if (Test-Path $name) { Copy-Item -Path $name -Destination $stage -Force }
           }
+          # Do not duplicate the multi-hundred-megabyte models already in public/.
+          foreach ($duplicate in @("models","ort","ort-hf")) {
+            $path = Join-Path $stage ("dist\\" + $duplicate)
+            if (Test-Path $path) { Remove-Item $path -Recurse -Force }
+          }
           $builds = Join-Path $stage "windows-build"
           New-Item -ItemType Directory -Force -Path $builds | Out-Null
           Get-ChildItem release -File | Where-Object { $_.Extension -in @(".exe",".blockmap") } | Copy-Item -Destination $builds -Force
@@ -90,13 +101,87 @@ jobs:
           $zip = Join-Path $PWD "release\Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip"
           Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -CompressionLevel Optimal -Force
           Get-Item $zip | Format-List Name,Length,FullName
-      - uses: actions/upload-artifact@v4
+      - name: Split complete package into download-safe parts
+        shell: pwsh
+        run: |
+          $zip = Join-Path $PWD "release\Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip"
+          $chunkBytes = 400MB
+          $input = [System.IO.File]::OpenRead($zip)
+          $buffer = New-Object byte[] (8MB)
+          $index = 1
+          try {
+            while ($input.Position -lt $input.Length) {
+              $part = "{0}.part{1:D2}" -f $zip, $index
+              $output = [System.IO.File]::Create($part)
+              try {
+                $remaining = [Math]::Min($chunkBytes, $input.Length - $input.Position)
+                while ($remaining -gt 0) {
+                  $read = $input.Read($buffer, 0, [int][Math]::Min($buffer.Length, $remaining))
+                  if ($read -le 0) { throw "Unexpected end of complete ZIP while splitting." }
+                  $output.Write($buffer, 0, $read)
+                  $remaining -= $read
+                }
+              } finally { $output.Dispose() }
+              Write-Host ("Created part {0}: {1:N0} bytes" -f $index, (Get-Item $part).Length)
+              $index++
+            }
+          } finally { $input.Dispose() }
+          $count = $index - 1
+          if ($count -gt 8) { throw "Complete package needs $count parts; increase the upload steps." }
+          "PART_COUNT=$count" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+      - name: Upload complete package part 01
+        uses: actions/upload-artifact@v4
         with:
-          name: Mathorium-Desktop-10.0.0-Windows-x64
-          path: |
-            release/*.exe
-            release/*.blockmap
-            release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip
-            public/models/manifest.json
-          if-no-files-found: error
+          name: Mathorium-Desktop-Complete-Part-01
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part01
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload complete package part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Complete-Part-02
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part02
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload complete package part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Complete-Part-03
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part03
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload complete package part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Complete-Part-04
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part04
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload complete package part 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Complete-Part-05
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part05
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload complete package part 06
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Complete-Part-06
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part06
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload complete package part 07
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Complete-Part-07
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part07
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload complete package part 08
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mathorium-Desktop-Complete-Part-08
+          path: release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip.part08
+          if-no-files-found: ignore
           retention-days: 30
