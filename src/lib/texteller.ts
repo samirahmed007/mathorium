@@ -24,20 +24,20 @@ function configureOffline() {
 }
 async function loadConfig(progress?:Progress) {
   configureOffline();
-  const root=new URL("models/texteller-int8/",document.baseURI);
+  const root=new URL("models/texteller3-int8/",document.baseURI);
   const response=await fetch(new URL("generation_config.json",root));
   if(!response.ok)throw new Error("TexTeller model bundle is missing generation_config.json. Rebuild the desktop package with both model assets.");
   const config=await response.json();
   const reported=Number(config.max_new_tokens||config.max_length||config.decoder?.max_position_embeddings||1024);
   modelLimit=Math.max(128,Math.min(2048,(Number.isFinite(reported)?reported:512)-1));
-  progress?.(0.08,"Checking bundled TexTeller INT8 files");
+  progress?.(0.08,"Checking bundled TexTeller3 INT8 files");
 }
 export async function preloadTexTeller(progress?:Progress):Promise<void> {
   if(modelPromise)return modelPromise.then(()=>undefined);
   modelPromise=(async()=>{
     await loadConfig(progress);
-    progress?.(0.12,"Loading TexTeller INT8 encoder and decoder");
-    return await pipeline("image-to-text","texteller-int8",{
+    progress?.(0.12,"Loading TexTeller3 INT8 encoder and merged decoder");
+    return await pipeline("image-to-text","texteller3-int8",{
       device:"wasm",
       dtype:"q8",
       progress_callback:(event:any)=>{
@@ -46,7 +46,7 @@ export async function preloadTexTeller(progress?:Progress):Promise<void> {
       }
     } as any);
   })();
-  try {await modelPromise;progress?.(1,"TexTeller INT8 ready (offline)");}
+  try {await modelPromise;progress?.(1,"TexTeller3 INT8 ready (offline)");}
   catch(e){modelPromise=null;throw e;}
 }
 function inspectOutput(text:string):string[] {
