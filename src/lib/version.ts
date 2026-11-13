@@ -15,7 +15,7 @@ export const APP_NAME = "Mathorium";
 export const APP_VERSION = "9.0";
 
 /** Full semver, for the About dialog and export headers. */
-export const APP_BUILD = "9.0.0";
+export const APP_BUILD = "10.0.0";
 
 /** "Mathorium 9.0" — the form used in prompts and document generators. */
 export const APP_LABEL = `${APP_NAME} ${APP_VERSION}`;
