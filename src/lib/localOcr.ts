@@ -25,7 +25,7 @@ export function normalizeLocalOCRModel(model:string|null|undefined):LocalOCRMode
   return "pix2text";
 }
 export function isWebGPUAvailable():boolean {
-  return typeof navigator!=="undefined" && !!(navigator).gpu;
+  return typeof navigator!=="undefined" && !!(navigator as any).gpu;
 }
 export async function runLocalOCR(dataUrl:string,opts:LocalOCROpts={}):Promise<LocalOCRResult> {
   const model=normalizeLocalOCRModel(opts.model), started=performance.now();
