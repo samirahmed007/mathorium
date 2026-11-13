@@ -120,6 +120,7 @@ export const DEFAULT_SETTINGS: Settings = {
   useLocalOCR: true, // legacy mirror, kept in sync by the store
   localOCRModel: "auto", // "auto" migrates to the pinned Pix2Text MFR recipe
   recognitionQuality: "balanced", // engine adapters map this to their supported decoding controls
+  autoConvertAfterImport: true, // wait for a full import, then queue offline recognition automatically
   localOCRFirst: true, // legacy mirror, kept in sync by the store
   enhancedMathml: true, // use multi-engine LaTeX→MathML
   // v7 — both master switches start on. Offline covers Convert (the bundled
