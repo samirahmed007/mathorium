@@ -19,9 +19,11 @@ import { ShortcutsHelp } from "@/components/ShortcutsHelp";
 import { Toaster } from "@/components/Toaster";
 import { OnboardingHint } from "@/components/OnboardingHint";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SnipLibraryTab } from "@/components/SnipLibraryTab";
+import { loadDesktopLibrary, saveDesktopLibrary } from "@/lib/desktopLibrary";
 import { useHotkey } from "@/lib/hooks";
 
-type Tab = "convert" | "latex" | "mathtype" | "chat" | "providers" | "settings" | "about";
+type Tab = "convert" | "library" | "latex" | "mathtype" | "chat" | "providers" | "settings" | "about";
 
 /** One header button cycles all three theme choices, so it needs a label, an
  *  icon and a successor for each. "System" shows a monitor rather than a
@@ -32,6 +34,7 @@ const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { dark: "light", light: "sy
 
 const NAV: { id: Tab; label: string; icon: string; hotkey?: string }[] = [
   { id: "convert", label: "Convert", icon: "🖼️", hotkey: "g c" },
+  { id: "library", label: "Snip Library", icon: "📚", hotkey: "g i" },
   { id: "latex", label: "LaTeX Tool", icon: "∑", hotkey: "g l" },
   { id: "mathtype", label: "MathType", icon: "𝑓", hotkey: "g m" },
   { id: "chat", label: "Chat", icon: "💬", hotkey: "g h" },
@@ -57,6 +60,7 @@ function tabFromUrl(): Tab {
 function Shell() {
   const [tab, setTab] = useState<Tab>(tabFromUrl);
   const [results, setResults] = useState<ConvertResult[]>([]);
+  const [libraryReady, setLibraryReady] = useState(false);
   const [desktopCapture, setDesktopCapture] = useState<{dataUrl:string;fileName:string}|null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [latexTarget, setLatexTarget] = useState<{ resultId: string; exprIndex: number } | null>(null);
@@ -94,6 +98,20 @@ function Shell() {
     }
   }, [tab]);
 
+  // The desktop Snip Library stores images and recognition records in IndexedDB,
+  // not localStorage, so large screenshots survive restarts and application updates.
+  useEffect(() => {
+    if (!window.mathoriumDesktop?.isDesktop) { setLibraryReady(true); return; }
+    let active = true;
+    loadDesktopLibrary().then(items => { if (active) { setResults(items); setLibraryReady(true); } }).catch(() => { if (active) setLibraryReady(true); });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (!window.mathoriumDesktop?.isDesktop || !libraryReady) return;
+    const timer = window.setTimeout(() => { void saveDesktopLibrary(results).catch(error => console.error("Snip Library save failed", error)); }, 500);
+    return () => window.clearTimeout(timer);
+  }, [results, libraryReady]);
+
   const doneCount = results.filter((r) => r.expressions.length > 0 || r.raw).length;
 
   const editInLatex = (resultId: string, exprIndex: number) => {
@@ -121,6 +139,7 @@ function Shell() {
   useHotkey("mod+shift+l", () => toggleTheme(), [], { allowInInput: true });
   useHotkey("mod+shift+n", () => { newConversation(); setTab("chat"); }, []);
   useHotkey("g c", () => setTab("convert"), []);
+  useHotkey("g i", () => setTab("library"), []);
   useHotkey("g l", () => setTab("latex"), []);
   useHotkey("g m", () => setTab("mathtype"), []);
   useHotkey("g h", () => setTab("chat"), []);
@@ -130,6 +149,7 @@ function Shell() {
 
   const commands: Command[] = [
     { id: "go-convert", label: "Go to Convert", group: "Navigate", icon: "🖼️", shortcut: ["G", "C"], run: () => setTab("convert") },
+    { id: "go-library", label: "Open Snip Library", group: "Navigate", icon: "📚", shortcut: ["G", "I"], run: () => setTab("library") },
     { id: "go-latex", label: "Go to LaTeX Tool", group: "Navigate", icon: "∑", shortcut: ["G", "L"], run: () => setTab("latex") },
     { id: "go-mathtype", label: "Go to MathType", group: "Navigate", icon: "𝑓", shortcut: ["G", "M"], run: () => setTab("mathtype") },
     { id: "go-chat", label: "Go to Chat", group: "Navigate", icon: "💬", shortcut: ["G", "H"], run: () => setTab("chat") },
@@ -279,6 +299,12 @@ function Shell() {
         </aside>
 
         <main className="min-w-0 flex-1 px-4 py-5 md:px-6">
+          {tab === "library" && <SnipLibraryTab items={results}
+            onRename={(id,name) => setResults(prev => prev.map(item => item.id === id ? {...item,displayName:name} : item))}
+            onDelete={(id) => setResults(prev => prev.filter(item => item.id !== id))}
+            onToggleFavorite={(id) => setResults(prev => prev.map(item => item.id === id ? {...item,favorite:!item.favorite} : item))}
+            onCopy={(latex) => { if (window.mathoriumDesktop?.isDesktop) void window.mathoriumDesktop.writeClipboard(latex); else void navigator.clipboard.writeText(latex); }}
+            onEditLatex={editInLatex} onEditMathType={editInMathType} />}
           {tab === "convert" && <ConvertTab results={results} setResults={setResults} onExport={() => setExportOpen(true)} onEditInLatex={editInLatex} onEditInMathType={editInMathType} desktopCapture={desktopCapture} onDesktopCaptureConsumed={() => setDesktopCapture(null)} />}
           {tab === "latex" && <LatexTab results={results} setResults={setResults} target={latexTarget} setTarget={setLatexTarget} onOpenInMathType={openInMathType} />}
           {tab === "mathtype" && <MathTypeTab results={results} setResults={setResults} target={mathTypeTarget} setTarget={setMathTypeTarget} seed={mathTypeSeed} onSeedConsumed={() => setMathTypeSeed(null)} />}
