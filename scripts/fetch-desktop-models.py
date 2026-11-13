@@ -34,8 +34,10 @@ def main():
  for source,target in [("onnx/encoder_model_int8.onnx","onnx/encoder_model_quantized.onnx"),("onnx/decoder_model_int8.onnx","onnx/decoder_model_quantized.onnx")]:
   src=TARGET/source
   if src.stat().st_size<LIMITS[source]:raise RuntimeError("Weight file is too small (possible LFS pointer): "+source)
-  dst=TARGET/target;shutil.copy2(src,dst)
-  files[target]={"bytes":dst.stat().st_size,"sha256":digest(dst),"derived_from":source}
+  source_info=files.pop(source)
+  dst=TARGET/target
+  shutil.move(str(src),str(dst))
+  files[target]={"bytes":dst.stat().st_size,"sha256":digest(dst),"upstream_filename":source,"upstream_sha256":source_info["sha256"]}
  required=["config.json","generation_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","merges.txt","vocab.json","quantize_config.json","onnx/encoder_model_quantized.onnx","onnx/decoder_model_quantized.onnx"]
  missing=[f for f in required if not (TARGET/f).is_file()]
  if missing:raise RuntimeError("TexTeller package incomplete: "+", ".join(missing))
