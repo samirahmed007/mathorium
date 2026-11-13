@@ -52,7 +52,7 @@ export function DesktopSettingsSection() {
     <div className="space-y-2">
       <div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-300">Bundled recognition engines</span><button onClick={()=>void refresh()} className="text-[11px] text-violet-300 hover:text-violet-200">Refresh integrity status</button></div>
       {modelRow("Pix2Text MFR · ONNX",models?.pix2text)}
-      {modelRow("TexTeller · INT8 encoder + decoder",models?.texteller)}
+      {modelRow("TexTeller 3.0 · INT8 encoder + merged decoder",models?.texteller)}
       <div className="rounded-lg border border-white/8 bg-black/10 px-3 py-2 text-[10px] leading-relaxed text-slate-400">{models?.complete?"Both model bundles passed the file-presence check. Hash and inference verification are performed by the build/test workflow.":"This installation is not yet model-complete. Recognition for a missing engine stays disabled; no cloud or text OCR fallback is used."}</div>
     </div>
   </section>;
