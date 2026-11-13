@@ -128,8 +128,14 @@ export function SettingsTab() {
                   <option value="auto">Pix2Text MFR — recommended for math ⭐</option>
                   <option value="pix2text">Pix2Text MFR (same model, pinned)</option>
                   <option value="texteller">TexTeller INT8 — complex and long formulas</option>
+                  {!window.mathoriumDesktop?.isDesktop && <option value="tesseract">Tesseract.js — plain text only (web edition)</option>}
                 </Select>
               </Field>
+              {!window.mathoriumDesktop?.isDesktop && settings.localOCRModel === "tesseract" && (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200">
+                  Tesseract is available only in the web edition for explicitly selected plain-text OCR. It is not included or used by Mathorium Desktop mathematical recognition.
+                </div>
+              )}
               {settings.localOCRModel === "texteller" && (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200">
                   TexTeller uses the bundled INT8 encoder and decoder. It is loaded on demand, uses CPU/WASM by default, and never downloads model files at runtime.
