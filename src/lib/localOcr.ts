@@ -16,7 +16,7 @@ export interface LocalOCROpts {
   repair?: boolean;
 }
 export interface LocalOCRResult {
-  text:string; confidence:number; model:string; backend:string; isLatex:boolean;
+  text:string; model:string; backend:string; isLatex:boolean;
   tokens?:number; ms?:number; repairs?:RepairIssue[]; warnings?:string[];
 }
 export function normalizeLocalOCRModel(model:string|null|undefined):LocalOCRModel {
@@ -33,21 +33,22 @@ export async function runLocalOCR(dataUrl:string,opts:LocalOCROpts={}):Promise<L
   if(model==="texteller") {
     const result=await runTexTellerOCR(dataUrl,{signal:opts.signal,onProgress:opts.onProgress,quality:opts.quality||"balanced"});
     if(!result.text.trim())throw new Error("TexTeller returned an empty result.");
-    return {text:result.text.trim(),confidence:0.85,model:"TexTeller INT8 (offline)",backend:result.backend,isLatex:true,ms:Math.round(performance.now()-started),warnings:result.warnings};
+    return {text:result.text.trim(),model:"TexTeller INT8 (offline)",backend:result.backend,isLatex:true,ms:Math.round(performance.now()-started),warnings:result.warnings};
   }
   await loadPix2Text({onProgress:opts.onProgress,signal:opts.signal});
   if(opts.signal?.aborted)throw new Error("Recognition cancelled.");
-  const result=await recognizeFormula(dataUrl,{signal:opts.signal,onProgress:opts.onProgress,collectAlternatives:opts.repair!==false});
+  const useAlternatives=opts.quality==="high-accuracy" || (opts.quality!=="fast" && opts.repair!==false);
+  const result=await recognizeFormula(dataUrl,{signal:opts.signal,onProgress:opts.onProgress,collectAlternatives:useAlternatives});
   const raw=(result.latex||"").trim();
   if(!raw)throw new Error("Pix2Text returned no formula. Crop tightly around one mathematical expression and retry.");
   if(result.degenerate)throw new Error("Pix2Text could not complete a reliable decode. The output reached a repetition or token-cap condition; the source image has been preserved.");
   let text=raw,repairs:RepairIssue[]|undefined;
-  if(opts.repair!==false) {
+  if(opts.repair!==false && opts.quality!=="fast") {
     const fixed=repairPix2TextLatex(raw);text=fixed.latex;
     repairs=[...(result.delimiterIssues||[]),...fixed.issues];
   }
   const threads=getPix2TextThreadInfo().threads;
-  return {text,confidence:0.92,model:"Pix2Text MFR (offline)",backend:"ONNX Runtime WebAssembly ×"+threads,isLatex:true,tokens:result.tokens,ms:Math.round(performance.now()-started),...(repairs?.length?{repairs}:{}),...(result.degenerate?{warnings:["Possible incomplete output"]}:{})};
+  return {text,model:"Pix2Text MFR (offline)",backend:"ONNX Runtime WebAssembly ×"+threads,isLatex:true,tokens:result.tokens,ms:Math.round(performance.now()-started),...(repairs?.length?{repairs}:{}),...(result.degenerate?{warnings:["Possible incomplete output"]}:{})};
 }
 export async function preloadLocalOCR(model:LocalOCRModel="pix2text",onProgress?:(p:number,s:string)=>void):Promise<void> {
   if(normalizeLocalOCRModel(model)==="texteller") {
