@@ -91,7 +91,7 @@ function Shell() {
           setDesktopCaptures(prev => [...prev, ...files.map(file => ({ id: crypto.randomUUID(), dataUrl: file.dataUrl, fileName: file.name }))]);
           setTab("convert");
         }
-      } catch (error) { pushToast("Could not open images: " + (error instanceof Error ? error.message : String(error))); }
+      } catch (error) { pushToast({ title: "Could not open images", description: error instanceof Error ? error.message : String(error), tone: "error" }); }
     });
     return () => { offCapture(); offImport(); };
   }, [updateSettings, pushToast]);
