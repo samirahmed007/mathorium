@@ -150,7 +150,7 @@ export function ConvertTab({
           const file = new File([blob], capture.fileName || "mathorium-snip.png", { type: blob.type || "image/png", lastModified: Date.now() });
           if (!cancelled) await addFiles([file]);
         } catch (error) {
-          setError("Could not import " + capture.fileName + ": " + (error?.message || String(error)));
+          setError("Could not import " + capture.fileName + ": " + (error instanceof Error ? error.message : String(error)));
         } finally {
           if (!cancelled) onDesktopCaptureConsumed?.(capture.id);
         }
