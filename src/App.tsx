@@ -61,7 +61,7 @@ function Shell() {
   const [tab, setTab] = useState<Tab>(tabFromUrl);
   const [results, setResults] = useState<ConvertResult[]>([]);
   const [libraryReady, setLibraryReady] = useState(false);
-  const [desktopCapture, setDesktopCapture] = useState<{dataUrl:string;fileName:string}|null>(null);
+  const [desktopCaptures, setDesktopCaptures] = useState<Array<{id:string;dataUrl:string;fileName:string}>>([]);
   const [exportOpen, setExportOpen] = useState(false);
   const [latexTarget, setLatexTarget] = useState<{ resultId: string; exprIndex: number } | null>(null);
   const [mathTypeTarget, setMathTypeTarget] = useState<{ resultId: string; exprIndex: number } | null>(null);
@@ -77,11 +77,21 @@ function Shell() {
     const desktop = window.mathoriumDesktop;
     if (!desktop?.isDesktop) return;
     updateSettings({ convertEngine: "local", offlineEnabled: true, onlineEnabled: false });
-    return desktop.onCapture((capture) => {
-      setDesktopCapture({ dataUrl: capture.dataUrl, fileName: capture.fileName });
+    const offCapture = desktop.onCapture((capture) => {
+      setDesktopCaptures(prev => [...prev, { id: crypto.randomUUID(), dataUrl: capture.dataUrl, fileName: capture.fileName }]);
       setTab("convert");
     });
-  }, [updateSettings]);
+    const offImport = desktop.onImportRequest(async () => {
+      try {
+        const files = await desktop.chooseImages();
+        if (files.length) {
+          setDesktopCaptures(prev => [...prev, ...files.map(file => ({ id: crypto.randomUUID(), dataUrl: file.dataUrl, fileName: file.name }))]);
+          setTab("convert");
+        }
+      } catch (error) { pushToast("Could not open images: " + (error instanceof Error ? error.message : String(error)), "error"); }
+    });
+    return () => { offCapture(); offImport(); };
+  }, [updateSettings, pushToast]);
 
   // Keep the address bar honest about which tool is open, so a tab can be
   // bookmarked or shared. `replaceState` rather than `pushState`: switching tabs
@@ -305,7 +315,7 @@ function Shell() {
             onToggleFavorite={(id) => setResults(prev => prev.map(item => item.id === id ? {...item,favorite:!item.favorite} : item))}
             onCopy={(latex) => { if (window.mathoriumDesktop?.isDesktop) void window.mathoriumDesktop.writeClipboard(latex); else void navigator.clipboard.writeText(latex); }}
             onEditLatex={editInLatex} onEditMathType={editInMathType} />}
-          {tab === "convert" && <ConvertTab results={results} setResults={setResults} onExport={() => setExportOpen(true)} onEditInLatex={editInLatex} onEditInMathType={editInMathType} desktopCapture={desktopCapture} onDesktopCaptureConsumed={() => setDesktopCapture(null)} />}
+          {tab === "convert" && <ConvertTab results={results} setResults={setResults} onExport={() => setExportOpen(true)} onEditInLatex={editInLatex} onEditInMathType={editInMathType} desktopCaptures={desktopCaptures} onDesktopCaptureConsumed={(id) => setDesktopCaptures(prev => prev.filter(item => item.id !== id))} />}
           {tab === "latex" && <LatexTab results={results} setResults={setResults} target={latexTarget} setTarget={setLatexTarget} onOpenInMathType={openInMathType} />}
           {tab === "mathtype" && <MathTypeTab results={results} setResults={setResults} target={mathTypeTarget} setTarget={setMathTypeTarget} seed={mathTypeSeed} onSeedConsumed={() => setMathTypeSeed(null)} />}
           {tab === "chat" && <ChatTab />}
