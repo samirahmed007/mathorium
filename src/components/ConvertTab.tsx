@@ -58,7 +58,11 @@ export function ConvertTab({
   onExport,
   onEditInLatex,
   onEditInMathType,
+  desktopCapture,
+  onDesktopCaptureConsumed,
 }: {
+  desktopCapture?: {dataUrl:string;fileName:string}|null;
+  onDesktopCaptureConsumed?: () => void;
   results: ConvertResult[];
   setResults: Dispatch<SetStateAction<ConvertResult[]>>;
   onExport: () => void;
@@ -76,6 +80,9 @@ export function ConvertTab({
   const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLInputElement>(null);
+  const importCountRef = useRef(0);
+  const [importRevision, setImportRevision] = useState(0);
+  const autoStartedIds = useRef(new Set<string>());
 
   const update = useCallback(
     (id: string, patch: Partial<ConvertResult>) => {
@@ -92,7 +99,6 @@ export function ConvertTab({
         const sig = fileSig(f);
         if (seenFiles.has(sig)) return false;
         seenFiles.add(sig);
-        // auto-evict old signatures to avoid unbounded growth
         if (seenFiles.size > 1200) {
           const it = seenFiles.values().next();
           if (!it.done) seenFiles.delete(it.value);
@@ -100,11 +106,12 @@ export function ConvertTab({
         return true;
       });
       if (!arr.length) return;
-      const chunkSize = 16;
-      for (let i = 0; i < arr.length; i += chunkSize) {
-        const slice = arr.slice(i, i + chunkSize);
-        const part = await Promise.all(
-          slice.map(async (f) => ({
+      importCountRef.current += 1;
+      try {
+        const chunkSize = 16;
+        for (let i = 0; i < arr.length; i += chunkSize) {
+          const slice = arr.slice(i, i + chunkSize);
+          const part = await Promise.all(slice.map(async (f) => ({
             id: uid("img"),
             fileName: (f as any).webkitRelativePath || f.name || "image.png",
             dataUrl: await compress(f),
@@ -113,18 +120,38 @@ export function ConvertTab({
             mathml: [],
             createdAt: Date.now(),
             mode,
-          })),
-        );
-        setResults((prev) => [...part, ...prev]);
-        await new Promise((r) => setTimeout(r, 0));
-      }
-      if (arr.length >= 50) {
-        setError(`Loaded ${arr.length} images. Batch OCR ready — click Convert. Concurrency: ${batchConcurrency}.`);
-        setTimeout(() => setError(""), 5000);
+          })));
+          setResults((prev) => [...part, ...prev]);
+          await new Promise((r) => setTimeout(r, 0));
+        }
+        if (arr.length >= 50) {
+          setError("Loaded " + arr.length + " images. Desktop auto-conversion will start when import finishes. Concurrency: " + batchConcurrency + ".");
+          setTimeout(() => setError(""), 5000);
+        }
+      } finally {
+        importCountRef.current = Math.max(0, importCountRef.current - 1);
+        if (importCountRef.current === 0) setImportRevision(v => v + 1);
       }
     },
     [mode, setResults, batchConcurrency],
   );
+
+  // Native snips arrive as image data from the Electron main process. They enter
+  // the same deduplicated import queue as files and are converted locally.
+  useEffect(() => {
+    if (!desktopCapture) return;
+    let cancelled = false;
+    (async () => {
+      const response = await fetch(desktopCapture.dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], desktopCapture.fileName || "mathorium-snip.png", { type: blob.type || "image/png", lastModified: Date.now() });
+      if (!cancelled) {
+        await addFiles([file]);
+        onDesktopCaptureConsumed?.();
+      }
+    })().catch((error) => setError("Could not import screenshot: " + (error?.message || String(error))));
+    return () => { cancelled = true; };
+  }, [desktopCapture, addFiles]);
 
   // paste from clipboard
   useEffect(() => {
@@ -155,7 +182,7 @@ export function ConvertTab({
     //   local — Pix2Text only, never touches the network
     //   cloud — cloud vision only, Pix2Text is skipped
     //   both  — Pix2Text first, cloud vision as fallback
-    const engine = settings.convertEngine;
+    const engine = window.mathoriumDesktop?.isDesktop ? "local" : settings.convertEngine;
     const useLocal = engine === "local" || engine === "both";
     const useCloud = engine === "cloud" || engine === "both";
     // A non-vision cloud model only blocks us when cloud is the sole reader.
@@ -205,6 +232,7 @@ export function ConvertTab({
                   model: settings.localOCRModel,
                   signal: ac.signal,
                   repair: settings.pix2textRepair,
+                  quality: settings.recognitionQuality,
                 });
                 const rawText = (localResult.text || "").trim();
                 if (rawText) {
@@ -367,11 +395,22 @@ export function ConvertTab({
       }
     };
 
-    const conc = Math.min(Math.max(1, batchConcurrency), ids.length, 8);
+    const conc = window.mathoriumDesktop?.isDesktop ? 1 : Math.min(Math.max(1, batchConcurrency), ids.length, 8);
     await Promise.all(Array.from({ length: conc }, () => worker()));
     setRunning(false);
     abortRef.current = null;
   }, [activeModelId, activeProvider, instruction, isVision, mode, settings, update, setResults, batchConcurrency, pushToast]);
+
+  // Desktop imports auto-start once the full import operation is complete.
+  // Each ID is started at most once automatically; explicit retries remain manual.
+  useEffect(() => {
+    if (!window.mathoriumDesktop?.isDesktop || running || importCountRef.current !== 0 || importRevision === 0) return;
+    const ids = results.filter((r) => r.status === "pending" && !autoStartedIds.current.has(r.id)).map((r) => r.id);
+    if (!ids.length) return;
+    ids.forEach((id) => autoStartedIds.current.add(id));
+    const timer = window.setTimeout(() => { void processIds(ids); }, 20);
+    return () => window.clearTimeout(timer);
+  }, [importRevision, results, running, processIds]);
 
   const processPending = useCallback(() => {
     const pending = results.filter((r) => r.status === "pending").map((r) => r.id);
