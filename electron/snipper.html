@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mathorium Snip</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0a0f1b;color:#eef2ff;font:13px/1.45 "Segoe UI",Arial,sans-serif;user-select:none}
+#screen{position:fixed;inset:0;background-position:0 0;background-size:100% 100%;background-repeat:no-repeat}
+#shade{position:absolute;inset:0;background:rgba(5,10,20,.28);cursor:crosshair}
+#selection{position:absolute;display:none;border:2px solid #8b9dff;box-shadow:0 0 0 9999px rgba(2,6,18,.48),0 0 0 1px rgba(255,255,255,.5);cursor:move}
+.handle{position:absolute;width:10px;height:10px;border:1px solid #fff;background:#6477ef;border-radius:2px;display:none}
+#selection.active .handle{display:block}
+.nw{left:-6px;top:-6px;cursor:nwse-resize}.n{left:calc(50% - 5px);top:-6px;cursor:ns-resize}.ne{right:-6px;top:-6px;cursor:nesw-resize}.e{right:-6px;top:calc(50% - 5px);cursor:ew-resize}.se{right:-6px;bottom:-6px;cursor:nwse-resize}.s{left:calc(50% - 5px);bottom:-6px;cursor:ns-resize}.sw{left:-6px;bottom:-6px;cursor:nesw-resize}.w{left:-6px;top:calc(50% - 5px);cursor:ew-resize}
+#toolbar{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(10,16,32,.94);border:1px solid rgba(157,170,255,.25);border-radius:13px;box-shadow:0 10px 35px #0008;backdrop-filter:blur(12px)}
+#brand{font-weight:700;color:#c9d1ff;margin-right:8px;white-space:nowrap}button{border:1px solid #3c4768;border-radius:8px;padding:7px 12px;background:#1b2544;color:#eef2ff;cursor:pointer;font:600 12px "Segoe UI",Arial}
+button.primary{background:linear-gradient(120deg,#6475ed,#7959d6);border-color:#8793ff}button:hover{filter:brightness(1.15)}button:disabled{opacity:.45;cursor:default}
+#help,#measure{position:fixed;bottom:16px;padding:7px 10px;border-radius:8px;background:#0b1225d9;color:#d4dcf9;border:1px solid #8793ff40;z-index:3}
+#help{left:18px}#measure{right:18px}
+</style></head>
+<body>
+<div id="screen"><div id="shade"></div><div id="selection"><i class="handle nw" data-h="nw"></i><i class="handle n" data-h="n"></i><i class="handle ne" data-h="ne"></i><i class="handle e" data-h="e"></i><i class="handle se" data-h="se"></i><i class="handle s" data-h="s"></i><i class="handle sw" data-h="sw"></i><i class="handle w" data-h="w"></i></div></div>
+<div id="toolbar"><span id="brand">∑ Mathorium Snip</span><span id="status">Drag to select an equation</span><button id="cancel">Cancel&nbsp; Esc</button><button class="primary" id="confirm" disabled>Capture&nbsp; Enter</button></div>
+<div id="help">Drag to select · Drag inside to move · Drag handles to resize · Esc to cancel</div><div id="measure">No region selected</div>
+<script src="snipper.js"></script></body></html>
