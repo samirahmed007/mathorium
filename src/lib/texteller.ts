@@ -26,7 +26,7 @@ async function loadConfig(progress?:Progress) {
   configureOffline();
   const root=new URL("models/texteller3-int8/",document.baseURI);
   const response=await fetch(new URL("generation_config.json",root));
-  if(!response.ok)throw new Error("TexTeller model bundle is missing generation_config.json. Rebuild the desktop package with both model assets.");
+  if(!response.ok)throw new Error("TexTeller3 model bundle is missing generation_config.json. Rebuild the desktop package with both model assets.");
   const config=await response.json();
   const reported=Number(config.max_new_tokens||config.max_length||config.decoder?.max_position_embeddings||1024);
   modelLimit=Math.max(128,Math.min(2048,(Number.isFinite(reported)?reported:512)-1));
@@ -41,7 +41,7 @@ export async function preloadTexTeller(progress?:Progress):Promise<void> {
       device:"wasm",
       dtype:"q8",
       progress_callback:(event:any)=>{
-        if(event?.status==="progress")progress?.(0.12+0.78*(Number(event.progress)||0)/100,"Loading TexTeller model files");
+        if(event?.status==="progress")progress?.(0.12+0.78*(Number(event.progress)||0)/100,"Loading TexTeller3 model files");
         else if(event?.status)progress?.(0.15,String(event.status));
       }
     } as any);
@@ -72,7 +72,7 @@ export async function runTexTellerOCR(dataUrl:string,options:Options={}):Promise
     if(options.signal?.aborted)throw new Error("Recognition cancelled.");
     await preloadTexTeller(options.onProgress);
     if(options.signal?.aborted)throw new Error("Recognition cancelled.");
-    options.onProgress?.(0.05,"Preparing image for TexTeller");
+    options.onProgress?.(0.05,"Preparing image for TexTeller3");
     const imageResponse=await fetch(dataUrl);
     if(!imageResponse.ok)throw new Error("Could not read the selected image.");
     const image=await createImageBitmap(await imageResponse.blob());
@@ -87,7 +87,7 @@ export async function runTexTellerOCR(dataUrl:string,options:Options={}):Promise
       });
       if(options.signal?.aborted)throw new Error("Recognition cancelled.");
       const text=Array.isArray(output)?String(output[0]?.generated_text??""):String(output?.generated_text??output??"");
-      if(!text.trim())throw new Error("TexTeller produced an empty result. Check that the crop contains a mathematical expression.");
+      if(!text.trim())throw new Error("TexTeller3 produced an empty result. Check that the crop contains a mathematical expression.");
       const warnings=inspectOutput(text);
       options.onProgress?.(1,warnings.length?"Recognition finished — review completeness warnings":"Recognition finished");
       return {text:text.trim(),backend:"Transformers.js · ONNX Runtime Web · CPU/WASM",warnings};
