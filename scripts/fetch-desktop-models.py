@@ -40,11 +40,12 @@ def main():
  if missing:raise RuntimeError("TexTeller package incomplete: "+", ".join(missing))
  # Package the WASM files from the installed Transformers.js distribution; this
  # prevents the default CDN runtime path from being used by the desktop renderer.
- package_dist=ROOT/"node_modules"/"@huggingface"/"transformers"/"dist"
- wasm=list(package_dist.glob("ort-wasm*.wasm"))+list(package_dist.glob("ort-wasm*.mjs"))
- if not wasm:raise RuntimeError("No precompiled ONNX Runtime WASM files found in Transformers.js dist.")
- ort=PUBLIC/"ort-hf";ort.mkdir(parents=True,exist_ok=True)
- for p in wasm:shutil.copy2(p,ort/p.name)
+ runtime_dist=ROOT/"node_modules"/"onnxruntime-web"/"dist"
+ wasm=list(runtime_dist.glob("ort-wasm*.wasm"))+list(runtime_dist.glob("ort-wasm*.mjs"))
+ if not wasm:raise RuntimeError("No precompiled ONNX Runtime WASM files found in the installed onnxruntime-web package.")
+ for runtime_name in ("ort","ort-hf"):
+  ort=PUBLIC/runtime_name;ort.mkdir(parents=True,exist_ok=True)
+  for p in wasm:shutil.copy2(p,ort/p.name)
  pix=MODELS/"pix2text-mfr-quantized"
  pix_required=["config.json","generation_config.json","preprocessor_config.json","tokenizer.json","onnx/encoder_model.onnx","onnx/decoder_model.onnx","onnx/decoder_model_int8.onnx"]
  pix_files={}
