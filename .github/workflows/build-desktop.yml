@@ -28,8 +28,10 @@ jobs:
           python-version: "3.12"
       - name: Install JavaScript dependencies
         run: npm install
-      - name: Install model fetch dependency
-        run: python -m pip install --upgrade huggingface_hub
+      - name: Install model and icon build dependencies
+        run: python -m pip install --upgrade huggingface_hub Pillow
+      - name: Generate Windows application icon
+        run: python scripts/create-windows-icon.py
       - name: Fetch pinned TexTeller INT8 model
         run: python scripts/fetch-desktop-models.py
       - name: Verify both offline model bundles
