@@ -34,6 +34,11 @@ Requires Node.js 22+, Python 3.12+, and Internet access during dependency and mo
 
 The installed application does not download model files. The build-time script is pinned to Hugging Face commit `9727784d91d7f8437dc7140941c4335284ce075e`, fetches only the INT8 encoder/decoder and required configuration/tokenizer resources, maps their local names for the Transformers.js q8 resolver, and writes SHA-256 details to public/models/manifest.json.
 
+
+## TexTeller 3.0 lineage caveat
+
+The prompts name both `TexTeller 3.0 INT8` and the `onnx-community/TexTeller-ONNX` INT8 export. The pinned ONNX export's published configuration identifies `OleehyO/TexTeller` as its base path. A distinct `onnx-community/TexTeller3-ONNX` export identifies `Ji-Ha/TexTeller3` as its base and does not list the same INT8 encoder/decoder pair. This branch follows the specific INT8 export URL supplied in the prompts and does not mix weights from the separate TexTeller3 export. Upstream does not unambiguously identify the pinned ONNX snapshot as a separately versioned “3.0 INT8” release; therefore the bundle should be described as the specified TexTeller ONNX INT8 snapshot unless its exact training-checkpoint lineage is independently confirmed.
+
 ## Bundled models
 
 - Pix2Text MFR: the existing repository-tracked pix2text-mfr-quantized model directory, preserved as one recipe with its tokenizer, preprocessing and generation configuration.
