@@ -8,8 +8,8 @@ from huggingface_hub import model_info,snapshot_download
 ROOT=Path(__file__).resolve().parents[1]
 PUBLIC=ROOT/"public"; MODELS=PUBLIC/"models"; TARGET=MODELS/"texteller-int8"
 REPO="onnx-community/TexTeller-ONNX"
-ALLOW=["config.json","generation_config.json","preprocessor_config.json","processor_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","added_tokens.json","LICENSE","onnx/encoder_model_int8.onnx","onnx/decoder_model_int8.onnx"]
-OPTIONAL={"processor_config.json","added_tokens.json","LICENSE"}
+ALLOW=["config.json","generation_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","added_tokens.json","merges.txt","vocab.json","quantize_config.json","LICENSE","onnx/encoder_model_int8.onnx","onnx/decoder_model_int8.onnx"]
+OPTIONAL={"added_tokens.json","LICENSE"}
 LIMITS={"onnx/encoder_model_int8.onnx":80_000_000,"onnx/decoder_model_int8.onnx":210_000_000}
 def digest(p:Path)->str:
  h=hashlib.sha256()
@@ -35,7 +35,7 @@ def main():
   if src.stat().st_size<LIMITS[source]:raise RuntimeError("Weight file is too small (possible LFS pointer): "+source)
   dst=TARGET/target;shutil.copy2(src,dst)
   files[target]={"bytes":dst.stat().st_size,"sha256":digest(dst),"derived_from":source}
- required=["config.json","generation_config.json","preprocessor_config.json","tokenizer.json","tokenizer_config.json","onnx/encoder_model_quantized.onnx","onnx/decoder_model_quantized.onnx"]
+ required=["config.json","generation_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","merges.txt","vocab.json","quantize_config.json","onnx/encoder_model_quantized.onnx","onnx/decoder_model_quantized.onnx"]
  missing=[f for f in required if not (TARGET/f).is_file()]
  if missing:raise RuntimeError("TexTeller package incomplete: "+", ".join(missing))
  # Package the WASM files from the installed Transformers.js distribution; this
