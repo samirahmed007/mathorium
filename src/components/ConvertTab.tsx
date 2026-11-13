@@ -83,6 +83,7 @@ export function ConvertTab({
   const importCountRef = useRef(0);
   const [importRevision, setImportRevision] = useState(0);
   const autoStartedIds = useRef(new Set<string>());
+  const processingDesktopCaptureIds = useRef(new Set<string>());
 
   const update = useCallback(
     (id: string, patch: Partial<ConvertResult>) => {
@@ -114,7 +115,7 @@ export function ConvertTab({
           const part = await Promise.all(slice.map(async (f) => ({
             id: uid("img"),
             fileName: (f as any).webkitRelativePath || f.name || "image.png",
-            dataUrl: await compress(f),
+            dataUrl: f.name.startsWith("mathorium-snip-") ? await fileToDataUrl(f) : await compress(f),
             status: "pending" as const,
             expressions: [],
             mathml: [],
@@ -137,26 +138,26 @@ export function ConvertTab({
   );
 
   // Native screenshots and native file-dialog imports enter the same deduplicated
-  // image queue. The parent removes each item after it has been queued.
+  // image queue. Track in-flight IDs so parent renders cannot cancel a multi-item
+  // capture/import operation. Native snips bypass compression to preserve pixels.
   useEffect(() => {
-    if (!desktopCaptures?.length) return;
-    let cancelled = false;
-    (async () => {
-      for (const capture of desktopCaptures) {
-        if (cancelled) return;
+    for (const capture of desktopCaptures || []) {
+      if (processingDesktopCaptureIds.current.has(capture.id)) continue;
+      processingDesktopCaptureIds.current.add(capture.id);
+      void (async () => {
         try {
           const response = await fetch(capture.dataUrl);
           const blob = await response.blob();
           const file = new File([blob], capture.fileName || "mathorium-snip.png", { type: blob.type || "image/png", lastModified: Date.now() });
-          if (!cancelled) await addFiles([file]);
+          await addFiles([file]);
         } catch (error) {
           setError("Could not import " + capture.fileName + ": " + (error instanceof Error ? error.message : String(error)));
         } finally {
-          if (!cancelled) onDesktopCaptureConsumed?.(capture.id);
+          processingDesktopCaptureIds.current.delete(capture.id);
+          onDesktopCaptureConsumed?.(capture.id);
         }
-      }
-    })();
-    return () => { cancelled = true; };
+      })();
+    }
   }, [desktopCaptures, addFiles, onDesktopCaptureConsumed]);
 
   // paste from clipboard
