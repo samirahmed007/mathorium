@@ -8,6 +8,7 @@ from huggingface_hub import model_info,snapshot_download
 ROOT=Path(__file__).resolve().parents[1]
 PUBLIC=ROOT/"public"; MODELS=PUBLIC/"models"; TARGET=MODELS/"texteller-int8"
 REPO="onnx-community/TexTeller-ONNX"
+REVISION="9727784d91d7f8437dc7140941c4335284ce075e"
 ALLOW=["config.json","generation_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","added_tokens.json","merges.txt","vocab.json","quantize_config.json","LICENSE","onnx/encoder_model_int8.onnx","onnx/decoder_model_int8.onnx"]
 OPTIONAL={"added_tokens.json","LICENSE"}
 LIMITS={"onnx/encoder_model_int8.onnx":80_000_000,"onnx/decoder_model_int8.onnx":210_000_000}
@@ -18,10 +19,10 @@ def digest(p:Path)->str:
  return h.hexdigest()
 def main():
  print("Resolving "+REPO)
- info=model_info(REPO,revision="main",token=False);revision=info.sha
- if not revision or len(revision)<40:raise RuntimeError("Hub did not return immutable full model commit SHA")
+ info=model_info(REPO,revision=REVISION,token=False);revision=info.sha
+ if revision!=REVISION:raise RuntimeError("TexTeller snapshot did not resolve to the required immutable commit SHA")
  cache=ROOT/".cache"/"texteller-snapshot"
- snapshot_download(repo_id=REPO,revision=revision,local_dir=str(cache),allow_patterns=ALLOW,token=False,max_workers=4)
+ snapshot_download(repo_id=REPO,revision=REVISION,local_dir=str(cache),allow_patterns=ALLOW,token=False,max_workers=4)
  TARGET.mkdir(parents=True,exist_ok=True);files={}
  for rel in ALLOW:
   src=cache/rel
