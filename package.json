@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "desktop:launch": "electron .",
-    "desktop:build": "npm run build && electron-builder --win nsis portable --x64 --publish never"
+    "desktop:build": "npm run desktop:verify && npm run build && electron-builder --win nsis portable --x64 --publish never",
+    "desktop:fetch-models": "python scripts/fetch-desktop-models.py",
+    "desktop:verify": "node scripts/verify-desktop-models.mjs"
   },
   "dependencies": {
     "@types/jszip": "^3.4.0",
