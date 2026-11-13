@@ -118,7 +118,8 @@ export const DEFAULT_SETTINGS: Settings = {
   // Flipping Online on in the top bar is what opens up the cloud fallback.
   convertEngine: "local",
   useLocalOCR: true, // legacy mirror, kept in sync by the store
-  localOCRModel: "auto", // "auto" == Pix2Text MFR
+  localOCRModel: "auto", // "auto" migrates to the pinned Pix2Text MFR recipe
+  recognitionQuality: "balanced", // engine adapters map this to their supported decoding controls
   localOCRFirst: true, // legacy mirror, kept in sync by the store
   enhancedMathml: true, // use multi-engine LaTeX→MathML
   // v7 — both master switches start on. Offline covers Convert (the bundled
