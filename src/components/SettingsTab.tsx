@@ -74,12 +74,12 @@ export function SettingsTab() {
       {/* v6 Local OCR Engine */}
       <section className="space-y-3 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-cyan-200">Local Math OCR (Pix2Text — MathPix alternative)</h3>
+          <h3 className="text-sm font-semibold text-cyan-200">Offline Mathematical OCR Engines</h3>
           <Badge tone="green">BUNDLED</Badge>
           <Badge tone="blue">OFFLINE</Badge>
         </div>
         <p className="text-[11px] text-slate-400">
-          <b className="text-cyan-300">Pix2Text MFR</b> converts an image of a formula straight to LaTeX. The model (~31 MB) ships inside the app, so it needs no API key, no account and no network — nothing leaves your machine. Runs on CPU via WebAssembly, so it works on low-end and Windows 10 machines with no GPU. MIT licensed.
+          <b className="text-cyan-300">Pix2Text MFR</b> and <b className="text-cyan-300">TexTeller INT8</b> are the two desktop mathematical recognition engines. Both are required offline assets, loaded lazily and used locally. No Tesseract or cloud OCR fallback is part of the desktop recognition path.
         </p>
         <div className="space-y-2">
           {window.mathoriumDesktop?.isDesktop && (
@@ -93,31 +93,37 @@ export function SettingsTab() {
               <option value="fast">Fast</option><option value="balanced">Balanced</option><option value="high-accuracy">High Accuracy</option>
             </Select>
           </Field>
-          <Field label="Conversion engine" hint="which engine the Convert tab uses">
-            <Select value={settings.convertEngine} onChange={(e) => updateSettings({ convertEngine: e.target.value as any })}>
-              <option value="both">Both — Pix2Text first, cloud vision as fallback ⭐</option>
-              <option value="local">Local only — Pix2Text, 100% offline</option>
-              <option value="cloud">Cloud only — vision model, no local OCR</option>
-            </Select>
-          </Field>
-          {settings.convertEngine === "both" && (
+          {window.mathoriumDesktop?.isDesktop ? (
+            <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-2.5 text-[11px] text-emerald-200">
+              Desktop OCR is locked to the two installed offline mathematical engines. Select Pix2Text MFR or TexTeller INT8 below. No screenshot or image is sent to a cloud provider.
+            </div>
+          ) : (
+            <Field label="Conversion engine" hint="which engine the Convert tab uses">
+              <Select value={settings.convertEngine} onChange={(e) => updateSettings({ convertEngine: e.target.value as any })}>
+                <option value="both">Both — Pix2Text first, cloud vision as fallback ⭐</option>
+                <option value="local">Local only — Pix2Text, 100% offline</option>
+                <option value="cloud">Cloud only — vision model, no local OCR</option>
+              </Select>
+            </Field>
+          )}
+          {!window.mathoriumDesktop?.isDesktop && settings.convertEngine === "both" && (
             <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-2.5 text-[11px] text-cyan-200/80">
               Recommended. Every image is read on-device first. Only if Pix2Text fails does the selected cloud vision model get the image — and if that fails too, the result card shows <b>both</b> causes, never one masking the other.
             </div>
           )}
-          {settings.convertEngine === "local" && (
+          {!window.mathoriumDesktop?.isDesktop && settings.convertEngine === "local" && (
             <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-2.5 text-[11px] text-emerald-200">
               Fully offline — no network request is made and no image leaves your machine. If Pix2Text cannot read an image, that image is marked failed with the real reason; there is no cloud fallback. Works with no API key and no internet connection.
             </div>
           )}
-          {settings.convertEngine === "cloud" && (
+          {!window.mathoriumDesktop?.isDesktop && settings.convertEngine === "cloud" && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200">
               Pix2Text is skipped entirely; images are sent to the cloud provider selected in the Convert tab, which must be a <b>Vision</b> model. Accuracy on cropped formulas is usually lower than the local engine, and it needs a working network connection.
             </div>
           )}
-          {settings.convertEngine !== "cloud" && (
+          {(window.mathoriumDesktop?.isDesktop || settings.convertEngine !== "cloud") && (
             <>
-              <Field label="Local engine" hint="Pix2Text is the math model">
+              <Field label="Local engine" hint="Both models are offline math recognition engines; only one is loaded at a time">
                 <Select value={settings.localOCRModel} onChange={(e) => updateSettings({ localOCRModel: e.target.value as any })}>
                   <option value="auto">Pix2Text MFR — recommended for math ⭐</option>
                   <option value="pix2text">Pix2Text MFR (same model, pinned)</option>
