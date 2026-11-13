@@ -45,7 +45,7 @@ export function SnipLibraryTab({items,onRename,onDelete,onToggleFavorite,onCopy,
             <button title={item.favorite?"Remove favorite":"Add to favorites"} onClick={()=>onToggleFavorite(item.id)} className="rounded-lg px-2 py-1 text-lg text-amber-300">{item.favorite?"★":"☆"}</button>
           </div>
           <div className="border-t border-white/8 bg-black/10 px-3 py-3">
-            {latex?<><div className="overflow-x-auto rounded-lg bg-black/10 p-2"><MathView latex={latex}/></div><pre className="mt-2 max-h-16 overflow-auto whitespace-pre-wrap break-words text-[10px] text-slate-400">{latex}</pre></>:<div className="text-xs text-slate-500">No recognition result yet.</div>}
+            {latex?<><div className="overflow-x-auto rounded-lg bg-black/10 p-2"><MathView tex={latex}/></div><pre className="mt-2 max-h-16 overflow-auto whitespace-pre-wrap break-words text-[10px] text-slate-400">{latex}</pre></>:<div className="text-xs text-slate-500">No recognition result yet.</div>}
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t border-white/8 p-3">
             <button disabled={!latex} onClick={()=>onCopy(latex)} className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40">Copy LaTeX</button>
