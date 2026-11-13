@@ -72,7 +72,7 @@ function Shell() {
   useEffect(() => {
     const desktop = window.mathoriumDesktop;
     if (!desktop?.isDesktop) return;
-    updateSettings({ convertEngine: "local", offlineEnabled: true });
+    updateSettings({ convertEngine: "local", offlineEnabled: true, onlineEnabled: false });
     return desktop.onCapture((capture) => {
       setDesktopCapture({ dataUrl: capture.dataUrl, fileName: capture.fileName });
       setTab("convert");
