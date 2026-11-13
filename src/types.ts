@@ -84,7 +84,7 @@ export interface Settings {
    */
   convertEngine: "local" | "cloud" | "both";
   useLocalOCR: boolean; // legacy mirror of convertEngine != "cloud" (kept for older persisted state)
-  localOCRModel: "auto" | "pix2text" | "texteller";
+  localOCRModel: "auto" | "pix2text" | "texteller" | "tesseract";
   recognitionQuality: "fast" | "balanced" | "high-accuracy";
   autoConvertAfterImport: boolean; // which local OCR engine to use
   localOCRFirst: boolean; // legacy mirror of convertEngine != "cloud"
