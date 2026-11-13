@@ -95,7 +95,7 @@ export function SettingsTab() {
           </Field>
           {window.mathoriumDesktop?.isDesktop ? (
             <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-2.5 text-[11px] text-emerald-200">
-              Desktop OCR is locked to the two installed offline mathematical engines. Select Pix2Text MFR or TexTeller INT8 below. No screenshot or image is sent to a cloud provider.
+              Desktop OCR is locked to the two installed offline mathematical engines. Select Pix2Text MFR or TexTeller 3.0 INT8 below. No screenshot or image is sent to a cloud provider.
             </div>
           ) : (
             <Field label="Conversion engine" hint="which engine the Convert tab uses">
