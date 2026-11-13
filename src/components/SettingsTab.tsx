@@ -79,6 +79,11 @@ export function SettingsTab() {
           <b className="text-cyan-300">Pix2Text MFR</b> converts an image of a formula straight to LaTeX. The model (~31 MB) ships inside the app, so it needs no API key, no account and no network — nothing leaves your machine. Runs on CPU via WebAssembly, so it works on low-end and Windows 10 machines with no GPU. MIT licensed.
         </p>
         <div className="space-y-2">
+          <Field label="Recognition quality" hint="mapped to each model's supported decoding settings">
+            <Select value={settings.recognitionQuality} onChange={(e) => updateSettings({ recognitionQuality: e.target.value as any })}>
+              <option value="fast">Fast</option><option value="balanced">Balanced</option><option value="high-accuracy">High Accuracy</option>
+            </Select>
+          </Field>
           <Field label="Conversion engine" hint="which engine the Convert tab uses">
             <Select value={settings.convertEngine} onChange={(e) => updateSettings({ convertEngine: e.target.value as any })}>
               <option value="both">Both — Pix2Text first, cloud vision as fallback ⭐</option>
@@ -107,12 +112,12 @@ export function SettingsTab() {
                 <Select value={settings.localOCRModel} onChange={(e) => updateSettings({ localOCRModel: e.target.value as any })}>
                   <option value="auto">Pix2Text MFR — recommended for math ⭐</option>
                   <option value="pix2text">Pix2Text MFR (same model, pinned)</option>
-                  <option value="tesseract">Tesseract.js — plain text only, NOT math</option>
+                  <option value="texteller">TexTeller INT8 — complex and long formulas</option>
                 </Select>
               </Field>
-              {settings.localOCRModel === "tesseract" && (
+              {settings.localOCRModel === "texteller" && (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200">
-                  Tesseract is a plain-text OCR engine with no understanding of math notation. On formulas it produces garbled output (fractions, exponents and symbols are lost). Use it only for ordinary text; pick Pix2Text for math.
+                  TexTeller uses the bundled INT8 encoder and decoder. It is loaded on demand, uses CPU/WASM by default, and never downloads model files at runtime.
                 </div>
               )}
               <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-2.5 text-[11px] text-cyan-200/80">
