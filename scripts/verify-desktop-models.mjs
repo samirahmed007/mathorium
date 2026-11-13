@@ -27,4 +27,4 @@ const wasm=fs.existsSync(ort)?fs.readdirSync(ort).filter(n=>n.endsWith(".wasm"))
 if(!wasm.length||wasm.some(n=>fs.statSync(path.join(ort,n)).size<1000000)){console.error("Transformers.js offline WASM runtime missing or truncated.");process.exit(1);}
 if(!fs.existsSync(path.join(root,"public","ort","ort-wasm-simd-threaded.wasm"))){console.error("Pix2Text ONNX Runtime WASM missing.");process.exit(1);}
 console.log("✓ Both offline model bundles, manifest and WASM runtimes are present.");
-console.log("  TexTeller revision: "+manifest.texteller.revision);
+console.log("  TexTeller3 revision: "+manifest.texteller3.revision);
