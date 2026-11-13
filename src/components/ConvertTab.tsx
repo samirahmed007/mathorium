@@ -58,11 +58,11 @@ export function ConvertTab({
   onExport,
   onEditInLatex,
   onEditInMathType,
-  desktopCapture,
+  desktopCaptures,
   onDesktopCaptureConsumed,
 }: {
-  desktopCapture?: {dataUrl:string;fileName:string}|null;
-  onDesktopCaptureConsumed?: () => void;
+  desktopCaptures?: Array<{id:string;dataUrl:string;fileName:string}>;
+  onDesktopCaptureConsumed?: (id:string) => void;
   results: ConvertResult[];
   setResults: Dispatch<SetStateAction<ConvertResult[]>>;
   onExport: () => void;
@@ -136,22 +136,28 @@ export function ConvertTab({
     [mode, setResults, batchConcurrency],
   );
 
-  // Native snips arrive as image data from the Electron main process. They enter
-  // the same deduplicated import queue as files and are converted locally.
+  // Native screenshots and native file-dialog imports enter the same deduplicated
+  // image queue. The parent removes each item after it has been queued.
   useEffect(() => {
-    if (!desktopCapture) return;
+    if (!desktopCaptures?.length) return;
     let cancelled = false;
     (async () => {
-      const response = await fetch(desktopCapture.dataUrl);
-      const blob = await response.blob();
-      const file = new File([blob], desktopCapture.fileName || "mathorium-snip.png", { type: blob.type || "image/png", lastModified: Date.now() });
-      if (!cancelled) {
-        await addFiles([file]);
-        onDesktopCaptureConsumed?.();
+      for (const capture of desktopCaptures) {
+        if (cancelled) return;
+        try {
+          const response = await fetch(capture.dataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], capture.fileName || "mathorium-snip.png", { type: blob.type || "image/png", lastModified: Date.now() });
+          if (!cancelled) await addFiles([file]);
+        } catch (error) {
+          setError("Could not import " + capture.fileName + ": " + (error?.message || String(error)));
+        } finally {
+          if (!cancelled) onDesktopCaptureConsumed?.(capture.id);
+        }
       }
-    })().catch((error) => setError("Could not import screenshot: " + (error?.message || String(error))));
+    })();
     return () => { cancelled = true; };
-  }, [desktopCapture, addFiles]);
+  }, [desktopCaptures, addFiles, onDesktopCaptureConsumed]);
 
   // paste from clipboard
   useEffect(() => {
