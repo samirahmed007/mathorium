@@ -44,12 +44,31 @@ jobs:
           $files = Get-ChildItem release -File
           if (-not ($files | Where-Object { $_.Name -like "*.exe" })) { throw "No EXE package was generated." }
           $files | Get-FileHash -Algorithm SHA256 | Format-Table
+      - name: Assemble complete source + models + Windows builds ZIP
+        shell: pwsh
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP "Mathorium-Desktop-Complete"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          foreach ($name in @("src","electron","scripts","public","dist",".github/workflows")) {
+            if (Test-Path $name) { Copy-Item -Path $name -Destination $stage -Recurse -Force }
+          }
+          foreach ($name in @("package.json","package-lock.json","index.html","vite.config.ts","tsconfig.json","tsconfig.app.json","tsconfig.node.json","DESKTOP-BUILD.md","README.md")) {
+            if (Test-Path $name) { Copy-Item -Path $name -Destination $stage -Force }
+          }
+          $builds = Join-Path $stage "windows-build"
+          New-Item -ItemType Directory -Force -Path $builds | Out-Null
+          Get-ChildItem release -File | Where-Object { $_.Extension -in @(".exe",".blockmap") } | Copy-Item -Destination $builds -Force
+          if (-not (Test-Path (Join-Path $stage "public\models\manifest.json"))) { throw "Model manifest missing from complete package." }
+          $zip = Join-Path $PWD "release\Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip"
+          Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -CompressionLevel Optimal -Force
+          Get-Item $zip | Format-List Name,Length,FullName
       - uses: actions/upload-artifact@v4
         with:
           name: Mathorium-Desktop-10.0.0-Windows-x64
           path: |
             release/*.exe
             release/*.blockmap
+            release/Mathorium-Desktop-10.0.0-Complete-Windows-x64.zip
             public/models/manifest.json
           if-no-files-found: error
           retention-days: 30
