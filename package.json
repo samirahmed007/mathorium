@@ -88,7 +88,8 @@
         }
       ],
       "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "icon": "public/mathorium.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -96,7 +97,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "public/mathorium.ico",
+      "uninstallerIcon": "public/mathorium.ico"
     },
     "portable": {
       "artifactName": "${productName}-${version}-Portable.${ext}"
