@@ -4,7 +4,7 @@ import {
   loadPix2Text, recognizeFormula, isPix2TextLoaded, disposePix2Text, getPix2TextThreadInfo,
 } from "./pix2text";
 import { repairPix2TextLatex, type RepairIssue } from "./pix2textRepair";
-import { runTexTellerOCR, unloadTexTeller } from "./texteller";
+import { runTexTellerOCR, preloadTexTeller, unloadTexTeller } from "./texteller";
 
 export type LocalOCRModel = "auto" | "pix2text" | "texteller";
 export type RecognitionQuality = "fast" | "balanced" | "high-accuracy";
@@ -51,7 +51,7 @@ export async function runLocalOCR(dataUrl:string,opts:LocalOCROpts={}):Promise<L
 }
 export async function preloadLocalOCR(model:LocalOCRModel="pix2text",onProgress?:(p:number,s:string)=>void):Promise<void> {
   if(normalizeLocalOCRModel(model)==="texteller") {
-    await runTexTellerOCR.preload?.(onProgress);
+    await preloadTexTeller(onProgress);
     return;
   }
   await loadPix2Text({onProgress});
