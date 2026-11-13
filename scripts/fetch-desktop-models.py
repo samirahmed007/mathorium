@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Fetch TexTeller ONNX INT8 weights at build time; never used by installed app."""
+"""Fetch TexTeller3 ONNX INT8 weights at build time; never used by installed app."""
 from __future__ import annotations
 import hashlib,json,shutil
 from pathlib import Path
 from datetime import datetime,timezone
 from huggingface_hub import model_info,snapshot_download
 ROOT=Path(__file__).resolve().parents[1]
-PUBLIC=ROOT/"public"; MODELS=PUBLIC/"models"; TARGET=MODELS/"texteller-int8"
+PUBLIC=ROOT/"public"; MODELS=PUBLIC/"models"; TARGET=MODELS/"texteller3-int8"
 REPO="onnx-community/TexTeller3-ONNX"
 REVISION="ed90c6164810242882ca90863bb85697a76f4841"
 ALLOW=["config.json","generation_config.json","preprocessor_config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json","added_tokens.json","merges.txt","vocab.json","quantize_config.json","LICENSE","onnx/encoder_model_quantized.onnx","onnx/decoder_model_merged_quantized.onnx"]
